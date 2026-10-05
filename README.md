@@ -1,6 +1,6 @@
 # La Cagantina · demo
 
-Nivel 1 · versión 0.5.2-machi. Juego arcade de sátira política.
+Nivel 1 · versión 0.5.3-safari-audio Juego arcade de sátira política.
 
 ## Jugar
 

@@ -36,7 +36,7 @@
  * Unidades: píxeles lógicos (ancho de pantalla = 540), segundos.
  * ===================================================================== */
 const CONFIG = {
-    version: '0.5.2-machi',
+    version: '0.5.3-safari-audio',
     view: { width: 540, minHeight: 820, maxHeight: 1200 },
     // ---------------------------------------------------------------- LEVEL
     level: {
@@ -438,6 +438,9 @@ class AudioEngine {
         this.clipPositionOffset = 0;
         this.clipStartedAt = 0;
         this.recordedMusic = {};
+        // Safari grants playback permission to an element, not every later new track.
+        this.musicElement = null;
+        this.musicPlayToken = 0;
         this.musicTrack = '';
         // ------------------------------------------------------------------- SFX
         this.playerPuffs = [];
@@ -585,6 +588,14 @@ class AudioEngine {
     }
     unlock() {
         try {
+            // iOS otherwise treats Web Audio as ambient, obeying the ringer switch.
+            const session = navigator.audioSession;
+            if (session && session.type !== 'playback') {
+                try {
+                    session.type = 'playback';
+                }
+                catch (e) { /* older implementations */ }
+            }
             if (!this.ctx) {
                 const AC = window.AudioContext || window.webkitAudioContext;
                 if (!AC)
@@ -616,10 +627,18 @@ class AudioEngine {
                 for (let i = 0; i < len; i++)
                     d[i] = Math.random() * 2 - 1;
             }
-            if (this.ctx.state === 'suspended')
-                this.ctx.resume().then(() => this.startScheduler()).catch(() => { });
-            else
-                this.startScheduler();
+            const c = this.ctx;
+            if (c.state !== 'running' && c.state !== 'closed') {
+                // Both resume and the first media.play must run inside the actual gesture.
+                // A .then() callback alone loses HTMLMediaElement permission on iOS.
+                c.resume().then(() => this.startScheduler()).catch(() => { });
+                const primer = c.createBufferSource();
+                primer.buffer = c.createBuffer(1, 1, c.sampleRate);
+                primer.connect(c.destination);
+                primer.onended = () => primer.disconnect();
+                primer.start();
+            }
+            this.startScheduler();
         }
         catch (e) {
             this.ctx = null;
@@ -673,6 +692,7 @@ class AudioEngine {
         };
     }
     stopMusicSources() {
+        this.musicPlayToken++;
         for (const media of Object.values(this.recordedMusic))
             media.pause();
         this.musicTrack = '';
@@ -1133,7 +1153,7 @@ class AudioEngine {
         this.stopMusicSources();
     }
     startScheduler() {
-        if (!this.ctx || this.song === 'none')
+        if (!this.ctx || this.song === 'none' || this.muted)
             return;
         const id = this.song === 'israel' ? 'israel' : this.song === 'boss' ? 'randy' : 'patria';
         if (typeof MUSIC_DATA !== 'undefined' && MUSIC_DATA[id]) {
@@ -1143,19 +1163,24 @@ class AudioEngine {
                     current.play().catch(() => { });
                 return;
             }
-            let media = this.recordedMusic[id];
+            let media = this.musicElement;
             if (!media) {
                 media = new Audio(MUSIC_DATA[id]);
                 media.loop = true;
                 media.preload = 'auto';
                 media.volume = .8;
+                media.setAttribute('playsinline', '');
                 this.ctx.createMediaElementSource(media).connect(this.music);
-                this.recordedMusic[id] = media;
+                this.musicElement = media;
             }
+            else if (!this.recordedMusic[id] || this.musicTrack !== id)
+                media.src = MUSIC_DATA[id];
+            this.recordedMusic[id] = media;
             this.musicTrack = id;
             this.restoreMusic();
             media.currentTime = 0;
-            media.play().catch(() => { if (this.musicTrack === id)
+            const playToken = ++this.musicPlayToken;
+            media.play().catch(() => { if (playToken === this.musicPlayToken && this.musicTrack === id)
                 this.musicTrack = ''; });
             return;
         }
@@ -3661,7 +3686,7 @@ class Input {
             this.down(t.identifier, t.clientX, t.clientY); }, opts);
         el.addEventListener('touchmove', e => { e.preventDefault(); for (const t of Array.from(e.changedTouches))
             this.move(t.identifier, t.clientX, t.clientY); }, opts);
-        el.addEventListener('touchend', e => { e.preventDefault(); for (const t of Array.from(e.changedTouches))
+        el.addEventListener('touchend', e => { e.preventDefault(); this.unlockAudio(); for (const t of Array.from(e.changedTouches))
             this.up(t.identifier); }, opts);
         el.addEventListener('touchcancel', e => { for (const t of Array.from(e.changedTouches))
             this.up(t.identifier); }, opts);
@@ -8464,7 +8489,7 @@ function dialogButton(label, fn, box) {
     const b = document.createElement('button');
     b.textContent = label;
     b.style.cssText = 'font:700 15px system-ui;padding:12px 18px;border:0;border-radius:10px;margin:12px 8px 0 0;background:#edd07f;color:#182b2d;cursor:pointer';
-    b.onclick = fn;
+    b.onclick = () => { AUDIO.unlock(); fn(); };
     box.appendChild(b);
     return b;
 }
