@@ -36,7 +36,7 @@
  * Unidades: píxeles lógicos (ancho de pantalla = 540), segundos.
  * ===================================================================== */
 const CONFIG = {
-    version: '0.6.0-community',
+    version: '0.6.1-player-setup',
     view: { width: 540, minHeight: 820, maxHeight: 1200 },
     // ---------------------------------------------------------------- LEVEL
     level: {
@@ -180,7 +180,7 @@ const CONFIG = {
             { at: 0, title: 'LA AVENIDA', sub: 'Arrastra para moverte. El disparo es automático.' },
             { at: 21, title: 'EL RETÉN', sub: 'El Lada bloquea la avenida.' },
             { at: 57, title: 'PASEO', sub: 'Ahora mandan el ejército.' },
-            { at: 104, title: 'LOS CATALEJOS', sub: 'Israel Rojas entra en escena.' },
+            { at: 104, title: 'UFFFF…', sub: 'Esto apesta a mala fe.' },
             { at: 127, title: 'CERCO ANTIMOTINES', sub: 'Escudos delante. El blindado detrás.' },
             { at: 140, title: 'LAS BOINAS ROJAS', sub: 'Ya se ve la Plaza. Aguanta el último cerco.' },
         ],
@@ -4070,6 +4070,36 @@ class FX {
  * Flota (sin motores ni pedos). Bounce idle, tilt al moverse, capa que
  * ondea por tiras. Squeeze→recoil→release al disparar. Curitas = salud.
  * ===================================================================== */
+const PLAYER_APPEARANCE = {
+    get() { return safeStorageGet('lc_skin') === 'mulato' ? 'mulato' : 'blanco'; },
+    source: null, tan: null,
+    sprite(skin = this.get()) {
+        if (skin === 'blanco')
+            return ART.player;
+        if (this.source !== ART.player || !this.tan) {
+            const original = ART.player, c = document.createElement('canvas');
+            c.width = original.width;
+            c.height = original.height;
+            c.lw = original.lw;
+            c.lh = original.lh;
+            const g = c.getContext('2d');
+            g.drawImage(original, 0, 0);
+            const pixels = g.getImageData(0, 0, c.width, Math.floor(c.height * 104 / 220));
+            for (let i = 0; i < pixels.data.length; i += 4) {
+                const r = pixels.data[i], green = pixels.data[i + 1], b = pixels.data[i + 2];
+                if (pixels.data[i + 3] && r > 80 && r > green * 1.03 && green > b * 1.08) {
+                    pixels.data[i] = r * .70;
+                    pixels.data[i + 1] = green * .58;
+                    pixels.data[i + 2] = b * .48;
+                }
+            }
+            g.putImageData(pixels, 0, 0);
+            this.source = original;
+            this.tan = c;
+        }
+        return this.tan;
+    }
+};
 // Geometría del sprite canon (relativa al centro, unidades lógicas)
 const PGEO = {
     cutSrcY: 104 / 220, // corte cachetes/capa (fracción del alto)
@@ -4079,6 +4109,7 @@ const PGEO = {
 };
 class Player {
     constructor() {
+        this.skin = PLAYER_APPEARANCE.get();
         this.x = 270;
         this.y = 800;
         this.vx = 0;
@@ -4161,7 +4192,7 @@ class Player {
     draw(g, opts = {}) {
         if (!this.alive)
             return;
-        const spr = ART.player;
+        const spr = PLAYER_APPEARANCE.sprite(this.skin);
         const bob = Math.sin(this.t * CONFIG.player.bounceFreq * TAU) * CONFIG.player.bounceAmp;
         const blinkHide = opts.blink !== false && this.invuln > 0 && Math.floor(this.t * 16) % 2 === 0;
         const s = this.scale;
@@ -4247,7 +4278,7 @@ class Player {
     }
     /** Mitades para la muerte (culo partido). */
     halfSprites() {
-        const spr = ART.player;
+        const spr = PLAYER_APPEARANCE.sprite(this.skin);
         const sw = spr.width, sh = spr.height, cutS = Math.round(PGEO.cutSrcY * sh);
         const mk = (sx, w, sy, h) => {
             const c = document.createElement('canvas');
@@ -6268,7 +6299,7 @@ class PlayScene {
         this.israel = new Israel();
         AUDIO.playSong('israel');
         AUDIO.playClip('israelIntro');
-        this.israel.bubble.say('¡Llegaron los catalejos!', 2.5);
+        this.israel.bubble.say('Uffff, esto apesta a mala fe.', 2.5);
         this.showBanner('¡CATALEJOS!', 'ISRAEL ROJAS', 2.2, '#8ce5ec');
     }
     retireWave() {
@@ -7614,6 +7645,7 @@ class TitleScene {
         this.H = 960;
         this.menuSpeechStarted = false;
         this.leaving = false;
+        this.page = 'home';
     }
     enter() {
         this.H = APP.H;
@@ -7644,8 +7676,11 @@ class TitleScene {
         if (this.leaving || document.getElementById('game-dialog'))
             return;
         this.startMenuSpeech();
-        showProfileDialog({ required: true, onSave: () => { if (APP.scene === this)
-                this.startOpening(id); } });
+        this.page = 'setup';
+        INPUT.setButtons([]);
+        INPUT.tapHandlers = [];
+        showProfileDialog({ required: true, difficulty: id, onBack: () => { this.page = 'home'; this.setButtons(); }, onSave: (selected) => { if (APP.scene === this)
+                this.startOpening(selected || id); } });
     }
     startOpening(id) {
         if (this.leaving)
@@ -7659,11 +7694,13 @@ class TitleScene {
         APP.go(new OpeningScene(id));
     }
     setButtons() {
-        const y = this.H - 249, ids = ['veryEasy', 'easy', 'hard'];
-        const btns = ids.map((id, i) => ({ id, x: 52, y: y + i * 59, w: 436, h: 51, enabled: () => true, onPress: () => this.beginGame(id) }));
-        btns.push({ id: 'sound', x: 52, y: this.H - 65, w: 212, h: 40, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
-                this.startMenuSpeech(); } });
-        btns.push({ id: 'share', x: 278, y: this.H - 65, w: 210, h: 40, enabled: () => true, onPress: () => PLATFORM.share({ score: storedNumber('lc_best'), kg: storedNumber('lc_kg_total') }) });
+        if (this.page === 'setup') {
+            INPUT.setButtons([]);
+            INPUT.tapHandlers = [];
+            return;
+        }
+        const btns = [{ id: 'start', x: 52, y: this.H - 150, w: 436, h: 64, enabled: () => true, onPress: () => this.beginGame('easy') }];
+        btns.push({ id: 'share', x: 160, y: this.H - 70, w: 220, h: 40, enabled: () => true, onPress: () => PLATFORM.share({ score: storedNumber('lc_best'), kg: storedNumber('lc_kg_total') }) });
         btns.push({ id: 'mute', x: 477, y: APP.safeTop + 8, w: 54, h: 48, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
                 this.startMenuSpeech(); } });
         INPUT.setButtons(btns);
@@ -7688,13 +7725,16 @@ class TitleScene {
         shade.addColorStop(1, 'rgba(6,23,28,.94)');
         g.fillStyle = shade;
         g.fillRect(0, 0, 540, H);
+        if (this.page === 'setup')
+            return;
         const logoScale = compact ? .73 : .83;
         drawSprite(g, LOGO, 270, (compact ? 71 : 94) + APP.safeTop, 0, logoScale, logoScale);
+        this.hero.skin = PLAYER_APPEARANCE.get();
         this.hero.x = 270 + Math.sin(this.t) * 8;
-        this.hero.y = Math.min(H - (compact ? 620 : 590), compact ? 230 : 240) + Math.sin(this.t * 2) * 3;
+        this.hero.y = Math.min(H - 520, compact ? 230 : 240) + Math.sin(this.t * 2) * 3;
         this.hero.scale = compact ? 1.16 : 1.42;
         this.hero.draw(g, { blink: false });
-        const taglineY = Math.min(H - 537, 320);
+        const taglineY = Math.min(H - 460, 320);
         g.font = `16px ${FONT_UI}`;
         g.textAlign = 'center';
         g.fillStyle = '#fff0c9';
@@ -7705,7 +7745,7 @@ class TitleScene {
             g.fillStyle = '#ffe192';
             g.fillText('Toca la pantalla para activar la música', 270, taglineY + 49);
         }
-        const sy = H - 497;
+        const sy = H - 390;
         roundRect(g, 35, sy, 470, 92, 17);
         fillStroke(g, 'rgba(13,41,46,.94)', '#b89752', 1.8);
         g.font = `15px ${FONT_UI}`;
@@ -7714,7 +7754,7 @@ class TitleScene {
         g.fillText('EL PUEBLO DE CUBA LE HA TIRADO', 270, sy + 22);
         g.fillText('HASTA LA ACTUALIDAD A LA DICTADURA', 270, sy + 42);
         comicText(g, `${fmtKg(COMMUNITY.total())} KG DE MIERDA`, 270, sy + 68, 29, '#ffe192', INK, 'center', .12);
-        const ry = H - 394;
+        const ry = H - 285;
         roundRect(g, 35, ry, 470, 110, 16);
         fillStroke(g, 'rgba(12,34,40,.93)', '#668177', 1.3);
         g.font = `17px ${FONT}`;
@@ -7742,11 +7782,8 @@ class TitleScene {
             g.fillText(entry ? `${fmtKg(entry.kg)} kg` : 'MUESTRA', 483, yy);
             g.textAlign = 'left';
         }
-        comicText(g, 'NIVEL DE DIFICULTAD:', 270, H - 257, 25, '#ffe192', INK, 'center', .08);
-        const ids = ['veryEasy', 'easy', 'hard'], cols = ['#2a7561', '#bb8438', '#a64939'];
-        ids.forEach((id, i) => { const yy = H - 249 + i * 59; drawButtonBase(g, 52, yy, 436, 51, cols[i], '', 1); comicText(g, CONFIG.difficulty[id].label, 270, yy + 19, 26, '#fff7db', INK, 'center', .12); g.font = `12px ${FONT_UI}`; g.fillStyle = '#fff0d6'; g.textAlign = 'center'; g.fillText(CONFIG.difficulty[id].desc, 270, yy + 39); });
-        drawButtonBase(g, 52, H - 65, 212, 40, '#294b52', AUDIO.muted ? 'SONIDO: NO' : 'SONIDO: SÍ', 17);
-        drawButtonBase(g, 278, H - 65, 210, 40, '#a77535', 'COMPARTIR', 18);
+        drawButtonBase(g, 52, H - 150, 436, 64, '#bb8438', '¡VAMOS A JUGAR!', 28);
+        drawButtonBase(g, 160, H - 70, 220, 40, '#294b52', 'COMPARTIR', 18);
         g.font = `11px ${FONT_UI}`;
         g.textAlign = 'center';
         g.fillStyle = '#aec3bb';
@@ -8543,7 +8580,7 @@ function gameDialog(title, allowClose = true) {
                 close();
         }
         if (e.key === 'Tab') {
-            const focusable = Array.from(box.querySelectorAll('button:not(:disabled),input,textarea,[tabindex="0"]'));
+            const focusable = Array.from(box.querySelectorAll('button:not(:disabled),input,select,textarea,[tabindex="0"]'));
             if (!focusable.length) {
                 e.preventDefault();
                 box.focus();
@@ -8572,10 +8609,40 @@ function dialogButton(label, fn, box) {
     return b;
 }
 function showProfileDialog(options = {}) {
-    const d = gameDialog('Ponle nombre a tu culo', !options.required);
+    const setup = options.difficulty !== undefined;
+    const d = gameDialog(setup ? 'PREPARA TU HÉROE' : 'Ponle nombre a tu culo', !options.required);
+    if (setup) {
+        d.overlay.style.background = '#0c2229f5';
+        d.box.style.padding = '20px';
+    }
+    let difficulty = null;
+    if (setup) {
+        const label = document.createElement('label');
+        label.textContent = 'NIVEL DE DIFICULTAD:';
+        label.htmlFor = 'player-difficulty';
+        label.style.cssText = 'display:block;font-weight:900;font-size:22px;color:#ffe297;margin:16px 0 10px';
+        d.box.appendChild(label);
+        difficulty = document.createElement('select');
+        difficulty.id = 'player-difficulty';
+        difficulty.style.cssText = 'width:100%;padding:12px;border:1px solid #d7b964;border-radius:10px;background:#294d51;color:#fff4da;font:700 16px system-ui';
+        for (const id of ['veryEasy', 'easy', 'hard']) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = CONFIG.difficulty[id].label;
+            difficulty.appendChild(option);
+        }
+        difficulty.value = options.difficulty;
+        d.box.appendChild(difficulty);
+        const caption = document.createElement('p');
+        caption.style.cssText = 'margin:7px 0 0;font-size:14px;color:#e7d8ad';
+        const describe = () => { caption.textContent = CONFIG.difficulty[difficulty.value].desc; };
+        difficulty.onchange = describe;
+        describe();
+        d.box.appendChild(caption);
+    }
     const info = document.createElement('p');
-    info.textContent = 'Este nombre aparecerá en tus aportes y en la imagen que compartas. Hasta 20 caracteres.';
-    info.style.lineHeight = '1.5';
+    info.textContent = setup ? 'Ponle nombre a tu culo' : 'Este nombre aparecerá en tus aportes y en la imagen que compartas. Hasta 20 caracteres.';
+    info.style.cssText = 'line-height:1.5;margin:16px 0 8px;font-weight:700';
     d.box.appendChild(info);
     const input = document.createElement('input');
     input.type = 'text';
@@ -8586,6 +8653,47 @@ function showProfileDialog(options = {}) {
     input.setAttribute('aria-label', 'Nombre del jugador');
     input.style.cssText = 'box-sizing:border-box;width:100%;padding:13px;border-radius:10px;border:1px solid #ae9c71;background:#fff4da;color:#192b2b;font:18px system-ui;user-select:text';
     d.box.appendChild(input);
+    let skin = PLAYER_APPEARANCE.get();
+    if (setup) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:22px;margin:14px 0 0';
+        d.box.appendChild(row);
+        const preview = document.createElement('canvas');
+        preview.width = 132;
+        preview.height = 170;
+        preview.style.cssText = 'width:99px;height:128px';
+        preview.setAttribute('aria-label', 'Vista previa de tu héroe');
+        row.appendChild(preview);
+        const choices = document.createElement('div');
+        choices.setAttribute('role', 'radiogroup');
+        choices.setAttribute('aria-label', 'Color del héroe');
+        choices.style.cssText = 'display:flex;gap:12px';
+        row.appendChild(choices);
+        const hero = new Player();
+        hero.controllable = false;
+        hero.x = 66;
+        hero.y = 84;
+        hero.scale = 1.6;
+        const redraw = () => { hero.skin = skin; const g = preview.getContext('2d'); g.clearRect(0, 0, 132, 170); hero.draw(g, { blink: false }); };
+        ['blanco', 'mulato'].forEach((tone, i) => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:grid;place-items:center;width:52px;height:52px;border-radius:50%;cursor:pointer';
+            const choice = document.createElement('input');
+            choice.type = 'radio';
+            choice.name = 'player-skin';
+            choice.value = tone;
+            choice.checked = skin === tone;
+            choice.setAttribute('aria-label', 'Tono ' + (i + 1));
+            choice.style.cssText = 'appearance:none;-webkit-appearance:none;width:44px;height:44px;margin:0;border:3px solid #15343a;border-radius:50%;cursor:pointer;background:' + (i === 0 ? '#ffc08b' : '#aa6a3b');
+            const mark = () => { for (const el of Array.from(choices.querySelectorAll('input')))
+                el.style.boxShadow = el.checked ? '0 0 0 3px #ffe297' : '0 0 0 1px #738d87'; };
+            choice.onchange = () => { skin = tone; mark(); redraw(); };
+            label.appendChild(choice);
+            choices.appendChild(label);
+            mark();
+        });
+        redraw();
+    }
     const error = document.createElement('p');
     error.setAttribute('role', 'status');
     error.style.cssText = 'font-size:14px;color:#ffd898;min-height:20px;margin:8px 0 0';
@@ -8602,20 +8710,29 @@ function showProfileDialog(options = {}) {
         CONTRIBUTORS.read();
         safeStorageSet('lc_alias', name);
         safeStorageSet('lc_alias_confirmed', '1');
+        if (setup)
+            safeStorageSet('lc_skin', skin);
         CONTRIBUTORS.add(name, 0, storedNumber('lc_best'));
         COMMUNITY.sync();
         d.close();
-        (_a = options.onSave) === null || _a === void 0 ? void 0 : _a.call(options);
+        (_a = options.onSave) === null || _a === void 0 ? void 0 : _a.call(options, difficulty === null || difficulty === void 0 ? void 0 : difficulty.value);
     };
     dialogButton(options.required ? '¡A jugar!' : 'Guardar', save, d.box);
     if (!options.required)
         dialogButton('Cancelar', d.close, d.box);
+    if (options.onBack)
+        dialogButton('Volver', () => { var _a; d.close(); (_a = options.onBack) === null || _a === void 0 ? void 0 : _a.call(options); }, d.box);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') {
         e.preventDefault();
+        AUDIO.unlock();
         save();
     } });
-    input.focus();
-    input.select();
+    if (setup)
+        d.box.focus();
+    else {
+        input.focus();
+        input.select();
+    }
 }
 function shareResult(r) {
     const source = r || {};
@@ -8700,7 +8817,7 @@ function buildResultShareCard(r, format) {
             glow.addColorStop(1, 'rgba(103,202,215,0)');
             g.fillStyle = glow;
             g.fillRect(190, 630, 700, 600);
-            drawSprite(g, ART.player, 540, 889, 0, 4.1, 4.1);
+            drawSprite(g, PLAYER_APPEARANCE.sprite(), 540, 889, 0, 4.1, 4.1);
         }
         text('LE TIRÓ', 540, 1170, 40, '#b9d8dc');
         amount(fmtKg(v.kg), 540, 1280, 172, 900, 2.4, true);
@@ -8726,7 +8843,7 @@ function buildResultShareCard(r, format) {
             glow.addColorStop(1, 'rgba(103,202,215,0)');
             g.fillStyle = glow;
             g.fillRect(700, 80, 465, 450);
-            drawSprite(g, ART.player, 935, 325, 0, 3.75, 3.75);
+            drawSprite(g, PLAYER_APPEARANCE.sprite(), 935, 325, 0, 3.75, 3.75);
         }
         g.fillStyle = '#b63837';
         g.fillRect(40, 535, 1120, 54);

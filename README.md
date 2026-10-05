@@ -1,6 +1,6 @@
 # La Cagantina · demo
 
-Nivel 1 · versión 0.6.0-community. Juego arcade de sátira política.
+Nivel 1 · versión 0.6.1-player-setup. Juego arcade de sátira política.
 
 ## Jugar
 
@@ -11,7 +11,7 @@ Puedes compartir este enlace con los testers. Abre desde el navegador del móvil
 - Móvil: usar el teléfono en vertical y arrastrar el dedo para mover al héroe.
 - Ordenador: flechas o WASD; también se puede arrastrar con el ratón.
 - Los disparos son automáticos. Los poderes especiales y la pausa tienen botones en pantalla.
-- Primero elige la dificultad: Yuma, Normal o Cubano. Después confirma tu nombre.
+- Pulsa «¡Vamos a jugar!». En la segunda pantalla elige dificultad, confirma tu nombre y escoge una muestra de color para tu héroe.
 
 ## Pruebas
 
