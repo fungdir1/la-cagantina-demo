@@ -36,7 +36,7 @@
  * Unidades: píxeles lógicos (ancho de pantalla = 540), segundos.
  * ===================================================================== */
 const CONFIG = {
-    version: '0.5.3-safari-audio',
+    version: '0.6.0-community',
     view: { width: 540, minHeight: 820, maxHeight: 1200 },
     // ---------------------------------------------------------------- LEVEL
     level: {
@@ -132,9 +132,9 @@ const CONFIG = {
     },
     // -------------------------------------------------------- DIFFICULTY
     difficulty: {
-        veryEasy: { label: 'YUMA', desc: 'Jamón biki', bulletSpeed: .85, fireRate: .75, spawnDensity: .9, enemyHp: .9, bossHp: .85, aggression: .8, meterGain: 1.2, carrierRate: 1.1, lifeWeight: 1.6, invuln: 1.2, checkpoint: true },
+        veryEasy: { label: 'YUMA', desc: 'Jamón biki - fácil', bulletSpeed: .85, fireRate: .75, spawnDensity: .9, enemyHp: .9, bossHp: .85, aggression: .8, meterGain: 1.2, carrierRate: 1.1, lifeWeight: 1.6, invuln: 1.2, checkpoint: true },
         easy: { label: 'NORMAL', desc: 'Como otro reordenamiento', bulletSpeed: 1.1, fireRate: 1.15, spawnDensity: 1.12, enemyHp: 1.15, bossHp: 1.12, aggression: 1.2, meterGain: 1, carrierRate: .8, lifeWeight: .45, invuln: 1, checkpoint: false },
-        hard: { label: 'CUBANO', desc: 'Aquí se viene a resistir', bulletSpeed: 1.22, fireRate: 1.32, spawnDensity: 1.28, enemyHp: 1.35, bossHp: 1.32, aggression: 1.38, meterGain: .9, carrierRate: .72, lifeWeight: .35, invuln: .9, checkpoint: false },
+        hard: { label: 'CUBANO', desc: 'Aquí se viene a resistir - difícil', bulletSpeed: 1.22, fireRate: 1.32, spawnDensity: 1.28, enemyHp: 1.35, bossHp: 1.32, aggression: 1.38, meterGain: .9, carrierRate: .72, lifeWeight: .35, invuln: .9, checkpoint: false },
     },
     // ------------------------------------------------------------ WAVES
     // Ciberclarias = CONSTANTES (stream propio). El resto: plantillas con peso.
@@ -5953,6 +5953,8 @@ class PlayScene {
         this.safeTop = 0;
         this.enemyFireBlocked = 0;
         this.dyingParts = [];
+        this.accountedKg = 0;
+        this.accountClock = 0;
         this.buttons = [];
         this.diffId = diffId;
         this.diff = CONFIG.difficulty[diffId];
@@ -5989,10 +5991,10 @@ class PlayScene {
         AUDIO.playSong(this.startT >= CONFIG.level.bossWarningAt ? 'none' : 'level');
         this.showBanner(this.startT > 0 ? 'CHECKPOINT' : 'NIVEL 1', this.startT > 0 ? this.chapterName : 'PLAZA DE LA REVOLUCIÓN', 2.6, '#ffe066');
         this.setButtons();
-        APP.onVisibilityHidden = () => { if (this.state === 'play')
+        APP.onVisibilityHidden = () => { this.accountProgress(); COMMUNITY.sync(); if (this.state === 'play')
             this.setPaused(true); };
     }
-    exit() { AUDIO.stopSpeech(); AUDIO.stopClip(); APP.onVisibilityHidden = null; }
+    exit() { this.accountProgress(); AUDIO.stopSpeech(); AUDIO.stopClip(); APP.onVisibilityHidden = null; }
     // ------------------------------------------------------------ helpers públicos
     scrollAt(t) {
         const L = CONFIG.level, sp = L.scrollSpeed;
@@ -6312,16 +6314,26 @@ class PlayScene {
         if (this.results)
             return; // Single accounting, even if a scene transition is delayed.
         const kg = this.kg;
-        const storedBest = Number(safeStorageGet('lc_best') || 0), storedKg = Number(safeStorageGet('lc_kg_total') || 0);
+        const storedBest = Number(safeStorageGet('lc_best') || 0);
         const best = Math.max(this.score, Number.isFinite(storedBest) ? storedBest : 0);
         safeStorageSet('lc_best', String(best));
         const gainedKg = Math.max(0, kg - this.baselineKg);
-        const total = (Number.isFinite(storedKg) ? storedKg : 0) + gainedKg;
-        CONTRIBUTORS.read(); // Migrate the previous total before crediting this run.
-        safeStorageSet('lc_kg_total', String(total));
-        CONTRIBUTORS.add(PLAYER_ALIAS.get(), gainedKg, this.score);
+        this.accountProgress();
+        const total = storedNumber('lc_kg_total');
+        COMMUNITY.sync();
         PLATFORM.submitScore(this.score, kg);
         this.results = { won, alias: PLAYER_ALIAS.get(), score: this.score, kills: this.kills, kg, gainedKg, best, total, duration: this.time, difficulty: this.diff.label, cures: this.cures, powers: this.powers };
+    }
+    accountProgress() {
+        const gained = Math.max(0, this.kg - this.baselineKg), delta = Math.max(0, gained - this.accountedKg);
+        if (delta <= 0)
+            return;
+        CONTRIBUTORS.read();
+        this.accountedKg = gained;
+        safeStorageSet('lc_kg_total', String(storedNumber('lc_kg_total') + delta));
+        safeStorageSet('lc_best', String(Math.max(storedNumber('lc_best'), this.score)));
+        CONTRIBUTORS.add(PLAYER_ALIAS.get(), delta, this.score);
+        COMMUNITY.changed();
     }
     // ------------------------------------------------------------ botones
     setButtons() {
@@ -6367,6 +6379,11 @@ class PlayScene {
     // ============================================================ UPDATE
     update(dt) {
         var _a, _b, _c;
+        this.accountClock += dt;
+        if (this.accountClock >= 1) {
+            this.accountClock = 0;
+            this.accountProgress();
+        }
         if (INPUT.pressed('KeyP') || INPUT.pressed('Escape'))
             this.setPaused(!this.paused);
         if (this.paused)
@@ -7599,7 +7616,6 @@ class TitleScene {
         this.leaving = false;
     }
     enter() {
-        var _a;
         this.H = APP.H;
         if (AUDIO.ctx)
             AUDIO.resume();
@@ -7613,8 +7629,8 @@ class TitleScene {
         PLAYER_ALIAS.ensure();
         CONTRIBUTORS.read();
         this.setButtons();
-        if (((_a = AUDIO.ctx) === null || _a === void 0 ? void 0 : _a.state) === 'running')
-            this.startMenuSpeech();
+        this.startMenuSpeech();
+        COMMUNITY.start();
     }
     exit() { if (!this.leaving)
         AUDIO.stopClip(); this.leaving = true; INPUT.tapHandlers = []; }
@@ -7623,21 +7639,20 @@ class TitleScene {
             return;
         AUDIO.unlock();
         AUDIO.playSong('title');
-        if (this.menuSpeechStarted || AUDIO.muted || !AUDIO.voicesOn)
-            return;
-        this.menuSpeechStarted = true;
-        AUDIO.playClip(CONFIG.audio.menuClip, 0, undefined, CONFIG.audio.menuClipVolume).then(ok => { if (!ok && !this.leaving)
-            this.menuSpeechStarted = false; });
     }
     beginGame(id) {
         if (this.leaving || document.getElementById('game-dialog'))
             return;
         this.startMenuSpeech();
-        if (!PLAYER_ALIAS.hasName()) {
-            showProfileDialog({ required: true, onSave: () => { if (APP.scene === this)
-                    this.beginGame(id); } });
+        showProfileDialog({ required: true, onSave: () => { if (APP.scene === this)
+                this.startOpening(id); } });
+    }
+    startOpening(id) {
+        if (this.leaving)
             return;
-        }
+        this.menuSpeechStarted = true;
+        AUDIO.unlock();
+        AUDIO.playClip(CONFIG.audio.menuClip, 0, undefined, CONFIG.audio.menuClipVolume);
         this.leaving = true;
         AUDIO.unlock();
         AUDIO.play('click');
@@ -7646,7 +7661,8 @@ class TitleScene {
     setButtons() {
         const y = this.H - 249, ids = ['veryEasy', 'easy', 'hard'];
         const btns = ids.map((id, i) => ({ id, x: 52, y: y + i * 59, w: 436, h: 51, enabled: () => true, onPress: () => this.beginGame(id) }));
-        btns.push({ id: 'profile', x: 52, y: this.H - 65, w: 212, h: 40, enabled: () => true, onPress: () => showProfileDialog() });
+        btns.push({ id: 'sound', x: 52, y: this.H - 65, w: 212, h: 40, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
+                this.startMenuSpeech(); } });
         btns.push({ id: 'share', x: 278, y: this.H - 65, w: 210, h: 40, enabled: () => true, onPress: () => PLATFORM.share({ score: storedNumber('lc_best'), kg: storedNumber('lc_kg_total') }) });
         btns.push({ id: 'mute', x: 477, y: APP.safeTop + 8, w: 54, h: 48, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
                 this.startMenuSpeech(); } });
@@ -7661,10 +7677,9 @@ class TitleScene {
             return;
         if (INPUT.pressed('Enter') || INPUT.pressed('Space'))
             this.beginGame('easy');
-        else if (INPUT.anyInput && !this.menuSpeechStarted)
-            this.startMenuSpeech();
     }
     draw(g) {
+        var _a;
         const H = this.H, compact = H < 900;
         this.bg.draw(g, this.bg.stopScroll * .7, H, this.t);
         const shade = g.createLinearGradient(0, 0, 0, H);
@@ -7685,6 +7700,11 @@ class TitleScene {
         g.fillStyle = '#fff0c9';
         g.fillText('UN CULO, UN HÉROE,', 270, taglineY);
         g.fillText('EL SENTIMIENTO DE UN PAÍS.', 270, taglineY + 22);
+        if (!AUDIO.muted && ((_a = AUDIO.ctx) === null || _a === void 0 ? void 0 : _a.state) !== 'running') {
+            g.font = `14px ${FONT_UI}`;
+            g.fillStyle = '#ffe192';
+            g.fillText('Toca la pantalla para activar la música', 270, taglineY + 49);
+        }
         const sy = H - 497;
         roundRect(g, 35, sy, 470, 92, 17);
         fillStroke(g, 'rgba(13,41,46,.94)', '#b89752', 1.8);
@@ -7693,15 +7713,15 @@ class TitleScene {
         g.textAlign = 'center';
         g.fillText('EL PUEBLO DE CUBA LE HA TIRADO', 270, sy + 22);
         g.fillText('HASTA LA ACTUALIDAD A LA DICTADURA', 270, sy + 42);
-        comicText(g, `${fmtKg(storedNumber('lc_kg_total'))} KG DE MIERDA`, 270, sy + 68, 29, '#ffe192', INK, 'center', .12);
+        comicText(g, `${fmtKg(COMMUNITY.total())} KG DE MIERDA`, 270, sy + 68, 29, '#ffe192', INK, 'center', .12);
         const ry = H - 394;
-        roundRect(g, 35, ry, 470, 128, 16);
+        roundRect(g, 35, ry, 470, 110, 16);
         fillStroke(g, 'rgba(12,34,40,.93)', '#668177', 1.3);
         g.font = `17px ${FONT}`;
         g.fillStyle = '#ffe192';
         g.textAlign = 'left';
         g.fillText('TOP 3 · LOS QUE MÁS APORTAN', 52, ry + 24);
-        const rows = CONTRIBUTORS.top(), sampleNames = ['Culo Valiente', 'Yunieski', 'La Yanelis'];
+        const rows = COMMUNITY.top(), sampleNames = ['Culo Valiente', 'Yunieski', 'La Yanelis'];
         for (let i = 0; i < 3; i++) {
             const yy = ry + 50 + i * 26, entry = rows[i];
             g.font = `18px ${FONT}`;
@@ -7722,18 +7742,15 @@ class TitleScene {
             g.fillText(entry ? `${fmtKg(entry.kg)} kg` : 'MUESTRA', 483, yy);
             g.textAlign = 'left';
         }
-        g.font = `16px ${FONT_UI}`;
-        g.fillStyle = '#ffe192';
-        g.textAlign = 'center';
-        g.fillText('NIVEL DE DIFICULTAD:', 270, H - 255);
+        comicText(g, 'NIVEL DE DIFICULTAD:', 270, H - 257, 25, '#ffe192', INK, 'center', .08);
         const ids = ['veryEasy', 'easy', 'hard'], cols = ['#2a7561', '#bb8438', '#a64939'];
         ids.forEach((id, i) => { const yy = H - 249 + i * 59; drawButtonBase(g, 52, yy, 436, 51, cols[i], '', 1); comicText(g, CONFIG.difficulty[id].label, 270, yy + 19, 26, '#fff7db', INK, 'center', .12); g.font = `12px ${FONT_UI}`; g.fillStyle = '#fff0d6'; g.textAlign = 'center'; g.fillText(CONFIG.difficulty[id].desc, 270, yy + 39); });
-        drawButtonBase(g, 52, H - 65, 212, 40, '#294b52', PLAYER_ALIAS.hasName() ? 'CAMBIAR NOMBRE' : 'NOMBRA TU CULO', 17);
+        drawButtonBase(g, 52, H - 65, 212, 40, '#294b52', AUDIO.muted ? 'SONIDO: NO' : 'SONIDO: SÍ', 17);
         drawButtonBase(g, 278, H - 65, 210, 40, '#a77535', 'COMPARTIR', 18);
         g.font = `11px ${FONT_UI}`;
         g.textAlign = 'center';
         g.fillStyle = '#aec3bb';
-        g.fillText('CONTADOR Y TOP 3 LOCALES' + (PLAYER_ALIAS.hasName() ? ' · ' + PLAYER_ALIAS.get() : ''), 270, H - 10);
+        g.fillText(COMMUNITY.statusText(), 270, H - 10);
         drawButtonBase(g, 482, APP.safeTop + 12, 42, 37, '#294b52', AUDIO.muted ? '♪ ×' : '♪', 19);
     }
 }
@@ -7748,6 +7765,8 @@ class OpeningScene {
     enter() {
         this.H = APP.H;
         AUDIO.stopMusic();
+        if (AUDIO.clipPlaying !== CONFIG.audio.menuClip && AUDIO.clipPendingId !== CONFIG.audio.menuClip)
+            AUDIO.playClip(CONFIG.audio.menuClip, 0, undefined, CONFIG.audio.menuClipVolume);
         INPUT.setButtons([]);
         INPUT.tapHandlers = [() => this.finish()];
     }
@@ -8407,12 +8426,29 @@ const PLAYER_ALIAS = {
     hasName() { var _a; return safeStorageGet('lc_alias_confirmed') === '1' && !!((_a = safeStorageGet('lc_alias')) === null || _a === void 0 ? void 0 : _a.trim()); },
     ensure() { },
 };
+const PLAYER_DEVICE = {
+    get() {
+        var _a;
+        const saved = safeStorageGet('lc_player_id');
+        if (saved)
+            return saved;
+        const bytes = new Uint8Array(16);
+        if ((_a = window.crypto) === null || _a === void 0 ? void 0 : _a.getRandomValues)
+            window.crypto.getRandomValues(bytes);
+        else
+            for (let i = 0; i < bytes.length; i++)
+                bytes[i] = Math.floor(Math.random() * 256);
+        const id = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+        safeStorageSet('lc_player_id', id);
+        return id;
+    }
+};
 const CONTRIBUTORS = {
     read() {
         try {
             const raw = JSON.parse(safeStorageGet('lc_contributors') || 'null');
             if (Array.isArray(raw))
-                return raw.filter(p => typeof p.alias === 'string' && Number.isFinite(p.kg) && p.kg >= 0 && Number.isFinite(p.best)).map(p => ({ alias: p.alias.slice(0, 20), kg: p.kg, best: p.best }));
+                return raw.filter(p => typeof p.alias === 'string' && Number.isFinite(p.kg) && p.kg >= 0 && Number.isFinite(p.best)).map(p => ({ id: p.id, alias: p.alias.slice(0, 20), kg: p.kg, best: p.best }));
         }
         catch (e) { }
         const kg = storedNumber('lc_kg_total');
@@ -8422,16 +8458,58 @@ const CONTRIBUTORS = {
     },
     top() { return this.read().sort((a, b) => b.kg - a.kg || b.best - a.best).slice(0, 3); },
     add(alias, kg, best) {
-        const rows = this.read(), key = alias.toLocaleLowerCase();
-        let p = rows.find(r => r.alias.toLocaleLowerCase() === key);
+        const rows = this.read(), id = PLAYER_DEVICE.get();
+        let p = rows.find(r => r.id === id);
         if (!p) {
-            p = { alias, kg: 0, best: 0 };
-            rows.push(p);
+            const legacy = rows.filter(r => !r.id);
+            p = { id, alias, kg: legacy.reduce((sum, r) => sum + r.kg, 0), best: legacy.reduce((best, r) => Math.max(best, r.best), 0) };
+            rows.splice(0, rows.length, ...rows.filter(r => r.id), p);
         }
+        p.alias = alias;
         p.kg += Math.max(0, kg);
         p.best = Math.max(p.best, best);
         safeStorageSet('lc_contributors', JSON.stringify(rows));
     }
+};
+// Set to the deployed API origin; no credentials or database keys in the game.
+const COMMUNITY_API_URL = '';
+const COMMUNITY = {
+    seed: 19099, snapshot: null, mineAtSync: 0,
+    started: false, busy: false, connected: false, lastPush: -Infinity,
+    total() { return this.snapshot ? this.snapshot.totalKg + Math.max(0, storedNumber('lc_kg_total') - this.mineAtSync) : this.seed + storedNumber('lc_kg_total'); },
+    top() { var _a; return ((_a = this.snapshot) === null || _a === void 0 ? void 0 : _a.top) || CONTRIBUTORS.top(); },
+    statusText() { return this.connected ? 'APORTE GLOBAL · ACTUALIZADO EN LÍNEA' : COMMUNITY_API_URL ? 'BASE HISTÓRICA + TU APORTE · SIN CONEXIÓN' : 'BASE HISTÓRICA + TU APORTE · GLOBAL PENDIENTE'; },
+    start() { PLAYER_DEVICE.get(); if (this.started)
+        return; this.started = true; this.sync(); if (COMMUNITY_API_URL)
+        setInterval(() => { if (!document.hidden)
+            this.sync(); }, 30000); },
+    async sync() {
+        if (!COMMUNITY_API_URL || this.busy)
+            return;
+        this.busy = true;
+        const kg = storedNumber('lc_kg_total');
+        try {
+            const response = await fetch(COMMUNITY_API_URL + '/sync', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: PLAYER_DEVICE.get(), alias: PLAYER_ALIAS.hasName() ? PLAYER_ALIAS.get() : 'Anónimo', kg, best: storedNumber('lc_best') }), signal: AbortSignal.timeout(8000) });
+            if (!response.ok)
+                throw Error('Sync unavailable');
+            const value = await response.json();
+            if (!Number.isFinite(value.totalKg) || value.totalKg < this.seed || !Array.isArray(value.top))
+                throw Error('Invalid community response');
+            this.snapshot = { totalKg: value.totalKg, top: value.top.filter((r) => typeof r.alias === 'string' && Number.isFinite(r.kg) && Number.isFinite(r.best)).slice(0, 3) };
+            this.mineAtSync = kg;
+            this.connected = true;
+        }
+        catch (e) {
+            this.connected = false;
+        }
+        finally {
+            this.busy = false;
+            if (this.connected && storedNumber('lc_kg_total') > kg)
+                this.sync();
+        }
+    },
+    changed() { const now = performance.now(); if (now - this.lastPush < 15000)
+        return; this.lastPush = now; this.sync(); }
 };
 function gameDialog(title, allowClose = true) {
     var _a;
@@ -8524,6 +8602,8 @@ function showProfileDialog(options = {}) {
         CONTRIBUTORS.read();
         safeStorageSet('lc_alias', name);
         safeStorageSet('lc_alias_confirmed', '1');
+        CONTRIBUTORS.add(name, 0, storedNumber('lc_best'));
+        COMMUNITY.sync();
         d.close();
         (_a = options.onSave) === null || _a === void 0 ? void 0 : _a.call(options);
     };
