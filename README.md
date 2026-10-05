@@ -4,7 +4,9 @@ Nivel 1 · versión 0.5.2-machi. Juego arcade de sátira política.
 
 ## Jugar
 
-Enlace de juego pendiente de activar GitHub Pages. La página se abrirá desde el navegador del móvil o del ordenador, sin cuenta de GitHub.
+**[Abrir el juego](https://fungdir1.github.io/la-cagantina-demo/)**
+
+Puedes compartir este enlace con los testers. Abre desde el navegador del móvil o del ordenador, sin cuenta de GitHub.
 
 - Móvil: usar el teléfono en vertical y arrastrar el dedo para mover al héroe.
 - Ordenador: flechas o WASD; también se puede arrastrar con el ratón.
@@ -13,7 +15,7 @@ Enlace de juego pendiente de activar GitHub Pages. La página se abrirá desde e
 
 ## Pruebas
 
-Si encuentras un fallo, anota tu dispositivo, navegador, dificultad y en qué momento ocurrió. Una captura o vídeo ayuda a reproducirlo.
+Si encuentras un fallo, anota tu dispositivo, navegador, dificultad y en qué momento ocurrió. Una captura o vídeo ayuda a reproducirlo. Puedes reportarlo en [Issues](https://github.com/fungdir1/la-cagantina-demo/issues).
 
 Por ahora, el contador acumulado y el top 3 se guardan en cada navegador. No constituyen una clasificación global entre jugadores.
 
