@@ -69,7 +69,7 @@
  * Unidades: píxeles lógicos (ancho de pantalla = 540), segundos.
  * ===================================================================== */
 const CONFIG = {
-    version: '0.8.0-arcade-menus',
+    version: '0.8.2-yuma-friendly',
     view: { width: 540, minHeight: 820, maxHeight: 1200 },
     // ---------------------------------------------------------------- LEVEL
     level: {
@@ -165,7 +165,8 @@ const CONFIG = {
     },
     // -------------------------------------------------------- DIFFICULTY
     difficulty: {
-        veryEasy: { label: 'YUMA', desc: 'Jamón biki - fácil', bulletSpeed: .85, fireRate: .75, spawnDensity: .9, enemyHp: .9, bossHp: .85, aggression: .8, meterGain: 1.2, carrierRate: 1.1, lifeWeight: 1.6, invuln: 1.2, checkpoint: true },
+        veryEasy: { label: 'YUMA', desc: 'Jamón biki - fácil', bulletSpeed: .52, fireRate: .4, spawnDensity: .5, enemyHp: .55, bossHp: .5, aggression: .55, meterGain: 1.6, carrierRate: 1.5, lifeWeight: 4, invuln: 2.1, checkpoint: true,
+            extraLives: 3, rescueInvuln: 5, assistHealEvery: 12, pickupRadius: 75, startingWeapon: 'homing', keepWeaponOnHit: true },
         easy: { label: 'NORMAL', desc: 'Como otro reordenamiento', bulletSpeed: 1.1, fireRate: 1.15, spawnDensity: 1.12, enemyHp: 1.15, bossHp: 1.12, aggression: 1.2, meterGain: 1, carrierRate: .8, lifeWeight: .45, invuln: 1, checkpoint: false },
         hard: { label: 'CUBANO', desc: 'Aquí se viene a resistir - difícil', bulletSpeed: 1.22, fireRate: 1.32, spawnDensity: 1.28, enemyHp: 1.35, bossHp: 1.32, aggression: 1.38, meterGain: .9, carrierRate: .72, lifeWeight: .35, invuln: .9, checkpoint: false },
     },
@@ -6033,6 +6034,8 @@ class PlayScene {
         this.results = null;
         this.safeTop = 0;
         this.enemyFireBlocked = 0;
+        this.extraLives = 0;
+        this.assistHealCd = 0;
         this.dyingParts = [];
         this.accountedKg = 0;
         this.accountClock = 0;
@@ -6040,7 +6043,13 @@ class PlayScene {
         this.diffId = diffId;
         this.diff = CONFIG.difficulty[diffId];
         this.startT = startT;
+        this.extraLives = this.diff.extraLives || 0;
+        this.assistHealCd = this.diff.assistHealEvery || 0;
         if (carry) {
+            if (this.diff.extraLives && Number.isFinite(carry.extraLives))
+                this.extraLives = clamp(carry.extraLives, 0, this.diff.extraLives);
+            if (this.diff.assistHealEvery && Number.isFinite(carry.assistHealCd))
+                this.assistHealCd = clamp(carry.assistHealCd, 0, this.diff.assistHealEvery);
             this.score = carry.score;
             this.kills = carry.kills;
             this.kgBonus = carry.kgBonus || 0;
@@ -6074,6 +6083,8 @@ class PlayScene {
             this.player.wlevel = 1;
             this.player.invuln = 2.5;
         }
+        if (this.startT === 0 && this.diff.startingWeapon)
+            this.player.weapon = this.diff.startingWeapon;
         AUDIO.playSong(this.startT >= CONFIG.level.bossWarningAt ? 'none' : 'level');
         this.showBanner(this.startT > 0 ? 'CHECKPOINT' : 'NIVEL 1', this.startT > 0 ? this.chapterName : 'PLAZA DE LA REVOLUCIÓN', 2.6, '#ffe066');
         this.setButtons();
@@ -6136,7 +6147,7 @@ class PlayScene {
     }
     makeCheckpoint(time) {
         return { score: this.score, kills: this.kills, kgBonus: this.kgBonus, cures: this.cures, powers: this.powers, time,
-            elapsedBefore: this.elapsedBefore + this.time, entryCarry: this.entryCarry, level: this.levelId };
+            elapsedBefore: this.elapsedBefore + this.time, entryCarry: this.entryCarry, level: this.levelId, extraLives: this.extraLives, assistHealCd: this.assistHealCd };
     }
     get kg() { return this.score * CONFIG.kg.perScore + this.kills * CONFIG.kg.perKill + this.kgBonus; }
     get levelProgress() { return clamp(this.t / CONFIG.level.bossAt, 0, 1); }
@@ -6213,12 +6224,26 @@ class PlayScene {
             this.fx.p(b.x, b.y, 0, 0, 0.25, 6, '#fff');
         } });
         if (p.hits >= CONFIG.player.maxHits) {
+            if (this.extraLives > 0) {
+                this.extraLives--;
+                this.cures += p.bandages.length;
+                p.hits = 0;
+                p.bandages = [];
+                p.invuln = this.diff.rescueInvuln;
+                p.healT = .65;
+                this.assistHealCd = this.diff.assistHealEvery;
+                this.clearEnemyBullets(true);
+                AUDIO.play('life');
+                this.fx.heal(p.x, p.y - 22);
+                this.fx.text('¡VIDA EXTRA!', p.x, p.y - 105, 28, '#abff9c', 1.5);
+                return;
+            }
             this.killPlayer();
             return;
         }
         p.bandages.push(side);
         p.invuln = CONFIG.player.invulnTime * this.diff.invuln;
-        if (p.weapon !== 'base') {
+        if (p.weapon !== 'base' && !this.diff.keepWeaponOnHit) {
             p.weapon = 'base';
             p.wlevel = 1;
             setTimeoutGame(() => { AUDIO.play('powerLost'); this.fx.text('PERDISTE EL ARMA', p.x, p.y - 110, 20, '#ddd', 1); }, 0.2);
@@ -6535,6 +6560,14 @@ class PlayScene {
         const p = this.player;
         if (this.state === 'play') {
             p.update(dt, this.W, this.H);
+            if (this.diff.assistHealEvery) {
+                this.assistHealCd = Math.max(0, this.assistHealCd - dt);
+                if (this.assistHealCd <= 0) {
+                    this.assistHealCd = this.diff.assistHealEvery;
+                    if (p.hits > 0)
+                        this.collect('life', p.x, p.y - 20);
+                }
+            }
             this.fireWeapon(dt);
             this.meter = Math.min(CONFIG.specials.meterMax, this.meter + CONFIG.specials.passivePerSecond * dt * this.diff.meterGain);
             if (this.tutorialMove && (p.moved > 140 || this.t > 7))
@@ -6797,7 +6830,7 @@ class PlayScene {
                 k.alive = false;
                 return;
             }
-            if (p.alive && this.state === 'play' && dist2(k.x, k.y, p.x, p.y - 20) < 46 * 46) {
+            if (p.alive && this.state === 'play' && dist2(k.x, k.y, p.x, p.y - 20) < (this.diff.pickupRadius || 46) ** 2) {
                 k.alive = false;
                 this.collect(k.kind, k.x, k.y);
             }
@@ -7377,7 +7410,7 @@ function drawHUD(g, s) {
         g.font = `11px ${FONT_UI}`;
         g.fillStyle = '#efe4ce';
         g.textAlign = 'center';
-        g.fillText('SALUD', 219, top + 44);
+        g.fillText(s.diff.extraLives ? 'SALUD · ' + s.extraLives + ' VIDAS EXTRA' : 'SALUD', 219, top + 44);
         // --- kg aportados
         drawPoopSwirl(g, 360, top + 22, 10, PAL.poop, PAL.poopHi, 1.6);
         comicText(g, fmtKg(s.kg), 378, top + 20, 24, '#ffe9a8', INK, 'left', 0.2);
@@ -9166,19 +9199,69 @@ function render() {
 if (typeof window !== 'undefined' && !window.__LC_NO_BOOT)
     window.addEventListener('load', () => { boot(); });
 
-/* Level-two art: the approved level-one preparation, scale and canvas objects.
- * Only the local sandbox reads L2_ASSET_DATA; no canonical art is replaced. */
+/* Level-two art: approved portraits and cached, registered living animal poses. */
 const L2_ART = {};
 const L2_PROJECTILE_META = {
     'l2-can': { r: 13, spin: 2.7, impact: 'metal' },
     'l2-book': { r: 12, spin: 3.4, impact: 'paper' },
     'l2-tin': { r: 12, spin: 2.3, impact: 'metal' },
     'l2-oil': { r: 9, spin: 2.2, impact: 'bottle' },
-    'l2-ostrich': { r: 12, spin: 1.6, impact: 'poop' },
-    'l2-crocodile': { r: 13, spin: 1.2, impact: 'poop' },
-    'l2-hutia': { r: 11, spin: 2.0, impact: 'poop' },
+    'l2-ostrich': { r: 12, spin: 0, impact: 'poop' },
+    'l2-crocodile': { r: 13, spin: 0, impact: 'poop' },
+    'l2-hutia': { r: 11, spin: 0, impact: 'poop' },
     'l2-shell': { r: 9, spin: 0, impact: 'metal' },
 };
+const L2_WALKING_PROJECTILES = {
+    'l2-ostrich': { key: 'projectileOstrich', w: 39, h: 48, fps: 8 },
+    'l2-crocodile': { key: 'projectileCrocodile', w: 84, h: 38, fps: 6 },
+    'l2-hutia': { key: 'projectileHutia', w: 34, h: 37, fps: 9 },
+};
+// Match the approved preview's shared scale, torso registration and foot baseline.
+// Independent clean PNG poses avoid both clipped tails and stray atlas fragments.
+function prepareL2WalkingFrames(poses, w, h) {
+    const raw = poses.map(pose => {
+        const cw = pose.naturalWidth || pose.width, ch = pose.naturalHeight || pose.height;
+        const ratio = Math.min(1, 240 / Math.max(cw, ch)), p = document.createElement('canvas');
+        p.width = Math.ceil(cw * ratio);
+        p.height = Math.ceil(ch * ratio);
+        const g = p.getContext('2d', { willReadFrequently: true });
+        g.drawImage(pose, 0, 0, p.width, p.height);
+        const a = g.getImageData(0, 0, p.width, p.height).data;
+        let x0 = p.width, y0 = p.height, x1 = -1, y1 = -1, solid = 0, sum = 0, weightedX = 0;
+        for (let y = 0; y < p.height; y++)
+            for (let x = 0; x < p.width; x++) {
+                const alpha = a[(y * p.width + x) * 4 + 3];
+                if (alpha < 100)
+                    continue;
+                solid++;
+                x0 = Math.min(x0, x);
+                y0 = Math.min(y0, y);
+                x1 = Math.max(x1, x);
+                y1 = Math.max(y1, y);
+                if (y >= p.height * .25 && y < p.height * .65) {
+                    sum += alpha;
+                    weightedX += x * alpha;
+                }
+            }
+        if (solid < 20)
+            throw Error('Missing living animal pose');
+        const bx = Math.max(0, (x0 - 1) / ratio), by = Math.max(0, (y0 - 1) / ratio);
+        return { pose, bx, by, bw: Math.min(cw - bx, (x1 - x0 + 3) / ratio), bh: Math.min(ch - by, (y1 - y0 + 3) / ratio), anchor: (sum ? weightedX / sum : (x0 + x1) / 2) / ratio, shift: 0, shiftY: 0 };
+    });
+    const anchor = raw.reduce((a, f) => a + f.anchor, 0) / raw.length, baseline = Math.max(...raw.map(f => f.by + f.bh));
+    for (const f of raw) {
+        f.shift = anchor - f.anchor;
+        f.shiftY = baseline - (f.by + f.bh);
+    }
+    const ux = Math.min(...raw.map(f => f.bx + f.shift)), uy = Math.min(...raw.map(f => f.by + f.shiftY));
+    const uw = Math.max(...raw.map(f => f.bx + f.shift + f.bw)) - ux, uh = baseline - uy;
+    const k = Math.min((w - 4) / uw, (h - 4) / uh);
+    return raw.map(f => makeSprite(w, h, g => {
+        g.imageSmoothingEnabled = true;
+        g.imageSmoothingQuality = 'high';
+        g.drawImage(f.pose, f.bx, f.by, f.bw, f.bh, w / 2 + (f.bx + f.shift - ux - uw / 2) * k, h / 2 + (f.by + f.shiftY - uy - uh / 2) * k, f.bw * k, f.bh * k);
+    }, 2));
+}
 function l2Metal(g, x0, x1) {
     const paint = g.createLinearGradient(x0, 0, x1, 0);
     paint.addColorStop(0, '#58636a');
@@ -9326,6 +9409,9 @@ function makeL2Shell() {
 async function prepareLevel2Art() {
     const keys = ['gerardo', 'gerardoEnraged', 'yusuam', 'hugo', 'guillermo', 'civilMan', 'civilWoman', 'map', 'tank',
         'projectileTin', 'projectileOil', 'projectileOstrich', 'projectileCrocodile', 'projectileHutia'];
+    for (const { key } of Object.values(L2_WALKING_PROJECTILES))
+        for (let i = 1; i < 6; i++)
+            keys.push(key + 'Frame' + i);
     const imgs = {};
     await Promise.all(keys.map(async (key) => {
         const uri = L2_ASSET_DATA[key];
@@ -9359,23 +9445,40 @@ async function prepareLevel2Art() {
         'l2-can': makeL2WateringCan(), 'l2-book': makeL2HardcoverBook(),
         'l2-shell': makeL2Shell(),
     };
-    // Same logical envelopes and collision metadata; only the raster art changes.
+    // Tins/oil remain thrown objects. Animals use upright six-pose walking cycles.
     const rasterProjectiles = [
         ['l2-tin', 'projectileTin', 38, 42], ['l2-oil', 'projectileOil', 26, 42],
-        ['l2-ostrich', 'projectileOstrich', 39, 48], ['l2-crocodile', 'projectileCrocodile', 63, 28],
-        ['l2-hutia', 'projectileHutia', 34, 37],
     ];
     for (const [kind, key, w, h] of rasterProjectiles) {
         if (!imgs[key])
             throw new Error(`Missing level-two projectile: ${key}`);
         L2_ART.projectiles[kind] = approvedSprite(imgs[key], w, h);
     }
+    L2_ART.projectileWalk = {};
+    for (const [kind, { key, w, h }] of Object.entries(L2_WALKING_PROJECTILES)) {
+        const poses = Array.from({ length: 6 }, (_, i) => imgs[key + (i ? 'Frame' + i : '')]);
+        if (poses.some(p => !p))
+            throw Error(`Missing walking pose: ${kind}`);
+        const frames = prepareL2WalkingFrames(poses, w, h);
+        L2_ART.projectileWalk[kind] = frames;
+        L2_ART.projectiles[kind] = frames[0];
+    }
 }
 function drawL2Projectile(g, b) {
-    var _a;
-    const spr = (_a = L2_ART.projectiles) === null || _a === void 0 ? void 0 : _a[b.kind];
+    var _a, _b;
+    const walk = L2_WALKING_PROJECTILES[b.kind], frames = (_a = L2_ART.projectileWalk) === null || _a === void 0 ? void 0 : _a[b.kind];
+    const spr = frames ? frames[Math.floor(b.t * walk.fps) % frames.length] : (_b = L2_ART.projectiles) === null || _b === void 0 ? void 0 : _b[b.kind];
     if (!spr)
         return false;
+    if (frames) {
+        g.save();
+        g.fillStyle = 'rgba(0,0,0,.22)';
+        ellipse(g, b.x, b.y + spr.lh / 2 - 4, spr.lw * .32, 2);
+        g.fill();
+        g.restore();
+        drawSprite(g, spr, b.x, b.y, 0, b.vx > 0 ? -1 : 1, 1);
+        return true;
+    }
     if (b.kind === 'l2-shell') {
         g.save();
         g.globalAlpha = .5;
@@ -10528,7 +10631,7 @@ const MUSIC_DATA = { "patria": "assets/d58c6a0bc6ef0a1dab6f6390ebc131c80dd82edf4
 MUSIC_DATA.randy = AUDIO_DATA.randyIntro;
 const AUDIO_META = {};
 
-const L2_ASSET_DATA = { "gerardo": "assets/871ec78d3b3d8ee4702d96a7c9708950f9d86cf20acface99f912471e87999d9.png", "gerardoEnraged": "assets/0856e6048c9048e6494ca3288dd9d30ae7e901b755eda4f394a3152eb61fd096.png", "yusuam": "assets/09740da9584a98c51541c20cdfd6b9e215e23090945bb63bf7456c6770569703.png", "hugo": "assets/3f50f763c098d985ffd13b1599eea48986f992392610e1008728be7002d26d76.png", "guillermo": "assets/3fc00d4226c21df7ad32426bd75eced402e0c13b261a397a611c9bb38cf9d808.png", "civilMan": "assets/80f4f23518cd6c9dcca957e8eff0fb3f342218bae0b86f511debc39681781ac3.png", "civilWoman": "assets/b99dc1596fdf3662f912b553b2b6eee11633f4fa2c9e85bf22d793eceef81a94.png", "map": "assets/82d8ba886ce40b65d5b22a8d5e5447db5162abaa1ec977f2af7410255f1bc77e.png", "tank": "assets/5a9ab89b84e87a8092d95afc7f9f521902c78b4a4dbb33e72db4f61b9d8fb587.png", "projectileTin": "assets/34b138f569bd2185168e13c8434672f10bd9eff3de276fc6fce7b5723df0d5d0.png", "projectileOil": "assets/5e6ed359528c169498a932daec68d752a13737f68ec27fc3448177b0288d59d9.png", "projectileOstrich": "assets/f696a5ed4d3ec03ca289ac4c13bf349e61358ff829a003fc7d8ee3267d2a6795.png", "projectileCrocodile": "assets/25112fea03cb77c03c7c5477e780bea7eceec0babb75f7954d1d8ab56a745223.png", "projectileHutia": "assets/25b5bbdbad95f8d355de3fa1af7d59df0c0d93df60b4ec850f5947f32a38a1e6.png" };
+const L2_ASSET_DATA = { "gerardo": "assets/871ec78d3b3d8ee4702d96a7c9708950f9d86cf20acface99f912471e87999d9.png", "gerardoEnraged": "assets/0856e6048c9048e6494ca3288dd9d30ae7e901b755eda4f394a3152eb61fd096.png", "yusuam": "assets/09740da9584a98c51541c20cdfd6b9e215e23090945bb63bf7456c6770569703.png", "hugo": "assets/3f50f763c098d985ffd13b1599eea48986f992392610e1008728be7002d26d76.png", "guillermo": "assets/3fc00d4226c21df7ad32426bd75eced402e0c13b261a397a611c9bb38cf9d808.png", "civilMan": "assets/80f4f23518cd6c9dcca957e8eff0fb3f342218bae0b86f511debc39681781ac3.png", "civilWoman": "assets/b99dc1596fdf3662f912b553b2b6eee11633f4fa2c9e85bf22d793eceef81a94.png", "map": "assets/82d8ba886ce40b65d5b22a8d5e5447db5162abaa1ec977f2af7410255f1bc77e.png", "tank": "assets/5a9ab89b84e87a8092d95afc7f9f521902c78b4a4dbb33e72db4f61b9d8fb587.png", "projectileTin": "assets/34b138f569bd2185168e13c8434672f10bd9eff3de276fc6fce7b5723df0d5d0.png", "projectileOil": "assets/d5f61084585dbacafce2c8f133035928089c7df13754471875f19361e83eed0d.png", "projectileOstrich": "assets/4d8f2d2da821317fc10912582d2e504ae6437bd88ee6cc9cab0b5e09e526da17.png", "projectileCrocodile": "assets/e5c656e575d1087c812e7957dcda920c65690082998a451708fe5e05e52fe78a.png", "projectileHutia": "assets/0c70b933679afcac9a8aabb19b1451a80299408f6b5400447e65a9310b8a3918.png", "projectileOstrichFrame1": "assets/af510e35dbaab6eb207653786d5a2d456a88a76753bff9f7a5eb83f9695bdf0c.png", "projectileOstrichFrame2": "assets/fff4123f0ecbe7ce4b87423b7a3875b4709d288cb9807137278d2433223e6531.png", "projectileOstrichFrame3": "assets/09aa370c03bb58988f3b024be87f2f5b65f1f2edb633f925f3f32b2baab13366.png", "projectileOstrichFrame4": "assets/e1b8b18e761c8b31e34d9eb526db3f23732ecb0e25f3cdaa3684da26f51b4a2c.png", "projectileOstrichFrame5": "assets/5d4628e5b4bc4f6787b1ec576a10996ccebb43ef1f4c14b3b59475b79787da67.png", "projectileCrocodileFrame1": "assets/2ef7f39026bb70ab3f8ae7569586f8115433ad10c63d41b56da29251b390ee14.png", "projectileCrocodileFrame2": "assets/74ce60b1b02bd9cbfc311d9cb135a3899ca11719cfac48046e0643af01de6a7f.png", "projectileCrocodileFrame3": "assets/1666e2f7bc7ec41cdca354a16cb030977662c0d68984b4fea3b3de422e5e2761.png", "projectileCrocodileFrame4": "assets/6d0623ca2a05c45e264ab81efffb20abd2fd71d5d058fc052320ceae80680e71.png", "projectileCrocodileFrame5": "assets/ebd8aeb4a635d674643ee1bd9286f9309cbf7aa77a96abfabf8c9ba4a56275c3.png", "projectileHutiaFrame1": "assets/389bd80c64c25c4e6910cf349c1480aee60698d9b0d83bfa571011309da6d70e.png", "projectileHutiaFrame2": "assets/52a9cff360bff6bb7f0ea25b2f60a12c4db6cbdebb8e5a367c4f40b1c2486928.png", "projectileHutiaFrame3": "assets/d0aedbf58e0c4e2637f0d68f1260014f546c0ec83d1c42c02d501b07ba973699.png", "projectileHutiaFrame4": "assets/567457b6685e78dba1b049b93ed4bec858479acc15fb531a271497cadd6d5e7d.png", "projectileHutiaFrame5": "assets/0cc335b8b076d76b54fd930e00a46c04afcd10bea170e906a85d8ea5eedeec15.png" };
 Object.assign(AUDIO_DATA, { "l2GerardoIntro": "assets/6a34dd8eaa7d403f928cb48f28ed6d1fcb06e68012139506a210582b0dc2f1c1.m4a", "l2GerardoExtra": "assets/8f18695109b3e3647f03239521a4be27ac004835dd1ad641f413eec44873bb08.m4a", "l2YusuamIntro": "assets/90437d48e06edf6652ef0718a9e7d823864e5de70bbed9a26c02918baf00d733.m4a", "l2YusuamExtra": "assets/7c7ac2c9472959a9b4641f90c82381e2eb0ac0c0840e0c3bd2cc67b1ca66ea5b.m4a", "l2HugoIntro": "assets/fe7a9b4112aba8bb71109efc098310fd9481e2e3b43117a0daf745c36c0ac68a.m4a", "l2HugoExtra": "assets/46a6cab9f265ee9d7d7abe739e1ef38b6d714d9dd057cd18cee2a4f5473f1b9a.m4a", "l2Guillermo": "assets/6783905d7a237db4d46ad38a524ac453728417b02c878db9d540ed6f6a59eb9b.m4a", "l2FidelIntermission": "assets/aa29a7292c1adc408009aa54cda1a06988220ead57ed3e5449d9a5dd33836010.m4a" });
 
 </script>
