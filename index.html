@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>La Cagantina</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#120b07">
+<meta name="theme-color" content="#0d2028">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
@@ -12,12 +12,46 @@
 @font-face{font-family:'Baloo 2';font-style:normal;font-weight:800;font-display:block;src:url(assets/db932b3668b6188413fcde58993f7667371033579f131d524cfed3f83c62d7e2.ttf) format('truetype')}
 @font-face{font-family:'Luckiest Guy';font-style:normal;font-weight:400;font-display:block;src:url(assets/bde64ad70289579762149264eeaad6f2bf19b542eca5d62ca9fb0d9cb04a47b2.ttf) format('truetype')}
   :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); color-scheme: dark; }
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #120b07; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0d2028; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
   #game { position: absolute; display: block; touch-action: none; }
-  #loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: #ffe9a8; font: 28px "Luckiest Guy", "Arial Black", sans-serif; letter-spacing: 1px; background: #120b07; z-index: 5; }
-  #loader .track { width: 220px; height: 14px; border: 3px solid #15110e; border-radius: 10px; background: #2b1a0e; overflow: hidden; box-shadow: 0 0 0 2px #6e3f1c; }
-  #loadbar { height: 100%; width: 0; background: linear-gradient(90deg, #6e3f1c, #a8693a); transition: width .2s; }
-  #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 16px; color: #fff; font: 26px "Luckiest Guy", "Arial Black", sans-serif; background: rgba(18,11,7,.96); z-index: 10; }
+  #loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: #fff2ce; font: 28px "Luckiest Guy", "Arial Black", sans-serif; background: #0d2028; z-index: 5; }
+  #loader .track { width: 220px; height: 9px; border-radius: 6px; background: #28414b; overflow: hidden; }
+  #loadbar { height: 100%; width: 0; background: #ffd158; transition: width .2s; }
+  #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 16px; color: #fff2ce; font: 26px "Luckiest Guy", "Arial Black", sans-serif; background: rgba(13,32,40,.98); z-index: 10; }
+  .arcade-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;box-sizing:border-box;padding:max(12px,var(--sat)) 12px max(12px,var(--sab));background:#071d25a6;color:#fff2ce;font:600 17px/1.35 "Baloo 2",sans-serif;overflow:auto;touch-action:pan-y}
+  .arcade-dialog{width:min(430px,100%);max-height:calc(100dvh - max(24px,var(--sat)) - max(24px,var(--sab)));overflow-y:auto;box-sizing:border-box;padding:24px;background:#102a34;border-radius:18px;box-shadow:0 12px 40px #0005;overscroll-behavior:contain;touch-action:pan-y}
+  .arcade-heading{font:400 28px/1.15 "Luckiest Guy",sans-serif;text-align:center;color:#fff2ce;margin:0 0 24px}
+  .arcade-mini-logo{display:block;width:145px;height:auto;margin:0 auto 20px}
+  .arcade-button{display:block;box-sizing:border-box;width:100%;min-height:50px;margin:14px 0 0;padding:12px 10px;border:2px solid #fff2ce;border-radius:11px;background:#ffd158;color:#211809;box-shadow:0 4px 0 #906018;font:400 21px/1.2 "Luckiest Guy",sans-serif;cursor:pointer;touch-action:manipulation}
+  .arcade-button:active{transform:translateY(2px);box-shadow:0 2px 0 #906018}
+  .arcade-secondary{background:#17333e;border-color:#6d8188;color:#fff2ce;box-shadow:none}
+  .arcade-secondary:active{box-shadow:none}
+  .arcade-link{background:transparent;border:0;box-shadow:none;text-decoration:underline;text-underline-offset:4px;font:600 17px "Baloo 2",sans-serif}
+  .arcade-field-heading{font:400 22px/1.2 "Luckiest Guy",sans-serif;margin:0 0 10px}
+  .arcade-field-label{display:block;margin:12px 0 8px}
+  .arcade-difficulties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .arcade-difficulties .arcade-button{margin:0;min-height:46px;font-size:17px;padding:11px 4px;border-radius:8px}
+  .arcade-difficulties [aria-pressed=true]{background:#ffd158;color:#211809;border-color:#fff2ce;box-shadow:0 2px 0 #906018}
+  .arcade-description{color:#d2dfd9;font-size:15px;line-height:1.4;margin:10px 0 14px}
+  .arcade-profile .arcade-description{min-height:40px;margin-bottom:4px}
+  .arcade-input{box-sizing:border-box;width:100%;min-height:48px;padding:12px;border:2px solid #708188;border-radius:9px;background:#fff2da;color:#172831;font:600 18px "Baloo 2",sans-serif;user-select:text;touch-action:manipulation}
+  .arcade-input::placeholder{color:#64604f;opacity:1}
+  .arcade-appearance{display:flex;align-items:center;justify-content:center;gap:28px;margin:16px 0}
+  .arcade-swatch{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;cursor:pointer}
+  .arcade-error{min-height:20px;color:#ffe28a;font-size:15px;margin:4px 0}
+  .arcade-ranking{margin:0 0 24px;padding-left:26px}
+  .arcade-ranking li{padding:16px 0;border-bottom:1px solid #41616c}
+  .arcade-ranking li::marker{color:#ffd158}
+  .arcade-ranking li span{display:inline-block;max-width:65%;overflow-wrap:anywhere}
+  .arcade-ranking strong{float:right;color:#ffd158;font-weight:600}
+  .arcade-share-formats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .arcade-share-formats .arcade-button{font:600 16px "Baloo 2",sans-serif;margin:0;box-shadow:none}
+  .arcade-share-formats [aria-pressed=true]{background:#ffd158;color:#211809;border-color:#fff2ce}
+  .arcade-share-preview{display:block;box-sizing:border-box;width:100%;max-height:240px;object-fit:contain;background:#0d2028;border-radius:10px;margin:18px 0}
+  .arcade-share-text{margin:18px 0 0;user-select:text}
+  .arcade-share-text summary{min-height:44px;cursor:pointer;color:#d2dfd9;touch-action:manipulation}
+  .arcade-share-text textarea{height:132px;font-size:16px;margin-top:8px}
+  @media(max-width:359px),(max-height:680px){.arcade-dialog{padding:18px}.arcade-mini-logo{width:108px;margin-bottom:14px}.arcade-heading{font-size:25px;margin-bottom:18px}.arcade-appearance{margin:10px 0}.arcade-appearance canvas{max-height:108px;object-fit:contain}.arcade-button{margin-top:12px}.arcade-field-heading{font-size:20px}}
 </style>
 </head>
 <body>
@@ -35,7 +69,7 @@
  * Unidades: píxeles lógicos (ancho de pantalla = 540), segundos.
  * ===================================================================== */
 const CONFIG = {
-    version: '0.7.0-two-levels',
+    version: '0.8.0-arcade-menus',
     view: { width: 540, minHeight: 820, maxHeight: 1200 },
     // ---------------------------------------------------------------- LEVEL
     level: {
@@ -6428,18 +6462,12 @@ class PlayScene {
             btns.push({ id: 'pause', x: 540 - 62, y: this.safeTop + 4, w: 58, h: 52, enabled: () => true, onPress: () => this.setPaused(true) });
         }
         if (this.paused) {
-            const y0 = H / 2 - 60;
-            btns.push({ id: 'resume', x: 120, y: y0, w: 300, h: 62, enabled: () => true, onPress: () => this.setPaused(false) });
-            btns.push({ id: 'sound', x: 120, y: y0 + 76, w: 300, h: 54, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); } });
-            btns.push({ id: 'voices', x: 120, y: y0 + 142, w: 300, h: 54, enabled: () => true, onPress: () => { AUDIO.voicesOn = !AUDIO.voicesOn; if (!AUDIO.voicesOn)
+            const y0 = H / 2 - 100;
+            btns.push({ id: 'resume', x: 50, y: y0, w: 440, h: 78, enabled: () => true, onPress: () => this.setPaused(false) });
+            btns.push({ id: 'sound', x: 50, y: y0 + 100, w: 210, h: 74, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); } });
+            btns.push({ id: 'voices', x: 280, y: y0 + 100, w: 210, h: 74, enabled: () => true, onPress: () => { AUDIO.voicesOn = !AUDIO.voicesOn; if (!AUDIO.voicesOn)
                     AUDIO.stopSpeech(); safeStorageSet('lc_voices', AUDIO.voicesOn ? '1' : '0'); } });
-            btns.push({ id: 'menu', x: 120, y: y0 + 208, w: 300, h: 54, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } });
-        }
-        if (this.state === 'results' && this.results) {
-            const y0 = H / 2 + 120;
-            btns.push({ id: 'again', x: 90, y: y0, w: 360, h: 64, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new PlayScene(this.diffId)); } });
-            btns.push({ id: 'share', x: 90, y: y0 + 78, w: 175, h: 54, enabled: () => true, onPress: () => { AUDIO.play('click'); PLATFORM.share(this.results); } });
-            btns.push({ id: 'menu', x: 275, y: y0 + 78, w: 175, h: 54, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } });
+            btns.push({ id: 'menu', x: 160, y: y0 + 194, w: 220, h: 74, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } });
         }
         INPUT.setButtons(btns);
         this.buttons = btns;
@@ -6450,7 +6478,7 @@ class PlayScene {
         this.paused = p;
         AUDIO.play('click');
         if (p)
-            AUDIO.pause(this.levelId === 2);
+            AUDIO.pause(true);
         else
             AUDIO.resume();
         this.setButtons();
@@ -7263,6 +7291,59 @@ function drawButtonBase(g, x, y, w, h, fill, label, size = 26, textColor = '#fff
     comicText(g, label, x + w / 2, y + h / 2 + 2, size, textColor, INK, 'center', 0.18);
     g.restore();
 }
+// Arcade claro: one palette and one primary action across the game's menus.
+const MENU = { background: '#0d2028', ink: '#211809', gold: '#ffd158', text: '#fff2ce', muted: '#d2dfd9' };
+function menuText(g, label, x, y, size = 26, display = false, color = MENU.text, maxWidth = 470) {
+    g.save();
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = `${size}px ${display ? FONT : FONT_UI}`;
+    while (g.measureText(label).width > maxWidth && size > 12) {
+        size--;
+        g.font = `${size}px ${display ? FONT : FONT_UI}`;
+    }
+    g.fillStyle = color;
+    g.fillText(label, x, y);
+    g.restore();
+}
+function drawMenuBackdrop(g, H, plate = ART.plazaPlate) {
+    g.fillStyle = MENU.background;
+    g.fillRect(0, 0, 540, H);
+    if (plate === null || plate === void 0 ? void 0 : plate.width) {
+        const scale = Math.max(540 / plate.width, H / plate.height), w = plate.width * scale, h = plate.height * scale;
+        g.drawImage(plate, (540 - w) / 2, (H - h) / 2, w, h);
+    }
+    const shade = g.createLinearGradient(0, 0, 0, H);
+    shade.addColorStop(0, 'rgba(7,29,37,.67)');
+    shade.addColorStop(.55, 'rgba(7,29,37,.74)');
+    shade.addColorStop(1, 'rgba(7,29,37,.95)');
+    g.fillStyle = shade;
+    g.fillRect(0, 0, 540, H);
+}
+function drawArcadeButton(g, x, y, w, h, label, primary = true, size = 30) {
+    g.save();
+    if (primary) {
+        roundRect(g, x, y + 5, w, h, 13);
+        g.fillStyle = '#906018';
+        g.fill();
+    }
+    roundRect(g, x, y, w, h, 13);
+    fillStroke(g, primary ? MENU.gold : '#17333e', primary ? MENU.text : '#6d8188', 2);
+    menuText(g, label, x + w / 2, y + h / 2 + 2, size, true, primary ? MENU.ink : MENU.text, w - 24);
+    g.restore();
+}
+function drawArcadeLink(g, x, y, w, h, label, size = 23) {
+    menuText(g, label, x + w / 2, y + h / 2, size, false, MENU.text, w - 16);
+}
+function resultMenuLayout(H, checkpoint = false) {
+    return { tvY: Math.max(APP.safeTop + 80, H * .11), tvScale: checkpoint ? .70 : H < 900 ? .82 : .9, contributionY: H * (checkpoint ? .51 : .59), primaryY: H - (checkpoint ? 260 : 174), secondaryY: H - 84 };
+}
+function drawMenuContribution(g, H, r, lost = false, checkpoint = false) {
+    const y = resultMenuLayout(H, checkpoint).contributionY;
+    menuText(g, lost ? 'Pero no importa: le tiraste' : 'Lo más importante: le tiraste', 270, y, 24);
+    menuText(g, fmtKg((r === null || r === void 0 ? void 0 : r.kg) || 0) + ' KG DE MIERDA', 270, y + 49, 46, true, MENU.gold);
+    menuText(g, 'a la dictadura.', 270, y + 95, 25);
+}
 function drawHUD(g, s) {
     var _a;
     const H = s.H;
@@ -7498,98 +7579,26 @@ function drawHUD(g, s) {
     }
     // --- pausa
     if (s.paused) {
-        g.fillStyle = 'rgba(10,6,4,0.72)';
+        g.fillStyle = 'rgba(7,29,37,.93)';
         g.fillRect(0, 0, 540, H);
-        comicText(g, 'PAUSA', 270, H / 2 - 130, 64, '#ffe066', INK);
-        const y0 = H / 2 - 60;
-        drawButtonBase(g, 120, y0, 300, 62, '#3aa655', 'CONTINUAR', 30);
-        drawButtonBase(g, 120, y0 + 76, 300, 54, '#51606e', 'SONIDO: ' + (AUDIO.muted ? 'NO' : 'SÍ'), 22);
-        drawButtonBase(g, 120, y0 + 142, 300, 54, '#51606e', 'VOCES: ' + (AUDIO.voicesOn ? 'SÍ' : 'NO'), 22);
-        drawButtonBase(g, 120, y0 + 208, 300, 54, '#b23a2e', 'MENÚ', 22);
+        menuText(g, 'PAUSA', 270, H / 2 - 197, 60, true);
+        const y0 = H / 2 - 100;
+        drawArcadeButton(g, 50, y0, 440, 78, 'SEGUIR JUGANDO');
+        drawArcadeButton(g, 50, y0 + 100, 210, 74, 'SONIDO ' + (AUDIO.muted ? 'NO' : 'SÍ'), false, 24);
+        drawArcadeButton(g, 280, y0 + 100, 210, 74, 'VOCES ' + (AUDIO.voicesOn ? 'SÍ' : 'NO'), false, 24);
+        drawArcadeLink(g, 160, y0 + 194, 220, 74, 'Volver al inicio');
     }
-    // --- resultados (victoria)
-    if (s.state === 'results' && s.results) {
-        const r = s.results;
-        const k = Math.min(1, s.st / 0.5);
-        g.save();
-        g.globalAlpha = k;
-        g.fillStyle = 'rgba(10,6,4,0.6)';
-        g.fillRect(0, 0, 540, H);
-        const py = H / 2 - 200;
-        roundRect(g, 40, py, 460, 300, 26);
-        g.fillStyle = '#fff6e0';
-        g.fill();
-        g.strokeStyle = INK;
-        g.lineWidth = 4;
-        g.stroke();
-        comicText(g, '¡VICTORIA!', 270, py - 4, 60, '#ffe066', INK);
-        comicText(g, CONFIG.lines.victory, 270, py + 50, 24, '#c21d12', INK, 'center', 0.18);
-        const rows = [['PUNTOS', fmtInt(r.score)], ['BAJAS', fmtInt(r.kills)], ['KG DE MIERDA TIRADOS AL RÉGIMEN', fmtKg(r.kg) + ' kg'], ['RÉCORD', fmtInt(r.best)]];
-        rows.forEach(([a, b], i) => {
-            g.font = `${a.startsWith('KG ') ? 15 : 20}px ${FONT}`;
-            g.fillStyle = '#6b4a2a';
-            g.textAlign = 'left';
-            g.textBaseline = 'middle';
-            if (a.startsWith('KG ')) {
-                g.fillText('KG DE MIERDA', 80, py + 91 + i * 42);
-                g.fillText('TIRADOS AL RÉGIMEN', 80, py + 108 + i * 42);
-            }
-            else
-                g.fillText(a, 80, py + 100 + i * 42);
-            g.fillStyle = INK;
-            g.textAlign = 'right';
-            g.font = `26px ${FONT}`;
-            g.fillText(b, 460, py + 100 + i * 42);
-        });
-        const y0 = H / 2 + 120;
-        drawButtonBase(g, 90, y0, 360, 64, '#3aa655', 'JUGAR OTRA VEZ', 30);
-        drawButtonBase(g, 90, y0 + 78, 175, 54, '#2e6fc9', 'COMPARTIR', 20);
-        drawButtonBase(g, 275, y0 + 78, 175, 54, '#b23a2e', 'MENÚ', 20);
-        g.restore();
-    }
+    // Results belong to the TV scenes; no extra menu flashes during their fade.
 }
 function drawVictoryCard(g, H, r, t, primaryLabel = 'JUGAR OTRA VEZ') {
     g.save();
-    g.globalAlpha = Math.min(1, t / 0.35);
-    g.fillStyle = 'rgba(10,6,4,.86)';
-    g.fillRect(0, 0, 540, H);
-    const py = H / 2 - 260;
-    roundRect(g, 40, py, 460, 368, 26);
-    fillStroke(g, '#fff4db', INK, 4);
-    comicText(g, 'VENCISTE EL NIVEL', 270, py + 38, 43, '#ffe066', INK, 'center', .15);
-    g.font = `18px ${FONT_UI}`;
-    g.fillStyle = '#715237';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText('Lo más importante: le tiraste', 270, py + 84);
-    comicText(g, fmtKg(r.kg) + ' KG', 270, py + 139, 76, '#b6382d', INK, 'center', .08);
-    comicText(g, 'DE MIERDA A LA DICTADURA', 270, py + 193, 22, '#875735', INK, 'center', .08);
-    const rows = [['PUNTOS', fmtInt(r.score)], ['BAJAS', fmtInt(r.kills)], ['RÉCORD', fmtInt(r.best)]];
-    rows.forEach(([label, value], i) => {
-        const x = 116 + i * 154;
-        g.textAlign = 'center';
-        g.font = `12px ${FONT_UI}`;
-        g.fillStyle = '#80664c';
-        g.fillText(label, x, py + 238);
-        g.font = `24px ${FONT}`;
-        g.fillStyle = INK;
-        g.fillText(value, x, py + 263);
-    });
-    g.strokeStyle = '#d9c6a1';
-    g.lineWidth = 1;
-    g.beginPath();
-    g.moveTo(75, py + 287);
-    g.lineTo(465, py + 287);
-    g.stroke();
-    comicText(g, 'COMPARTE TU APORTE', 270, py + 314, 22, '#b6382d', INK, 'center', .08);
-    g.font = `14px ${FONT_UI}`;
-    g.fillStyle = '#715237';
-    g.textAlign = 'center';
-    g.fillText('Facebook como post · Instagram como historia', 270, py + 342);
-    const y0 = H / 2 + 140;
-    drawButtonBase(g, 90, y0, 360, 60, '#3c975e', primaryLabel, primaryLabel.length > 18 ? 23 : 29);
-    drawButtonBase(g, 90, y0 + 73, 175, 50, '#ad813b', 'COMPARTIR', 19);
-    drawButtonBase(g, 275, y0 + 73, 175, 50, '#963b30', 'MENÚ', 21);
+    g.globalAlpha = Math.min(1, t / .25);
+    drawMenuContribution(g, H, r);
+    const l = resultMenuLayout(H);
+    menuText(g, fmtInt(r.score) + ' puntos · Récord ' + fmtInt(r.best), 270, l.primaryY - 36, 20, false, MENU.muted);
+    drawArcadeButton(g, 50, l.primaryY, 440, 78, primaryLabel);
+    drawArcadeLink(g, 65, l.secondaryY, 180, 74, 'Compartir');
+    drawArcadeLink(g, 295, l.secondaryY, 180, 74, 'Inicio');
     g.restore();
 }
 function drawHand(g, x, y) {
@@ -7721,10 +7730,14 @@ class TitleScene {
         AUDIO.unlock();
         AUDIO.playSong('title');
     }
-    beginGame(id) {
+    beginGame(id = PLAYER_PREFERENCES.difficulty(), edit = false) {
         if (this.leaving || document.getElementById('game-dialog'))
             return;
         this.startMenuSpeech();
+        if (PLAYER_ALIAS.hasName() && !edit) {
+            this.startOpening(PLAYER_PREFERENCES.difficulty());
+            return;
+        }
         this.page = 'setup';
         INPUT.setButtons([]);
         INPUT.tapHandlers = [];
@@ -7748,9 +7761,10 @@ class TitleScene {
             INPUT.tapHandlers = [];
             return;
         }
-        const btns = [{ id: 'start', x: 52, y: this.H - 150, w: 436, h: 64, enabled: () => true, onPress: () => this.beginGame('easy') }];
-        btns.push({ id: 'share', x: 160, y: this.H - 70, w: 220, h: 40, enabled: () => true, onPress: () => PLATFORM.share({ score: storedNumber('lc_best'), kg: storedNumber('lc_kg_total') }) });
-        btns.push({ id: 'mute', x: 477, y: APP.safeTop + 8, w: 54, h: 48, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
+        const layout = this.layout(), btns = [{ id: 'start', x: 50, y: layout.primaryY, w: 440, h: 78, enabled: () => true, onPress: () => this.beginGame() }];
+        btns.push({ id: 'top', x: 65, y: layout.linksY, w: 180, h: 74, enabled: () => true, onPress: () => showLeaderboardDialog() });
+        btns.push({ id: 'profile', x: 295, y: layout.linksY, w: 180, h: 74, enabled: () => true, onPress: () => this.beginGame(PLAYER_PREFERENCES.difficulty(), true) });
+        btns.push({ id: 'mute', x: 460, y: APP.safeTop + 4, w: 76, h: 74, enabled: () => true, onPress: () => { AUDIO.setMuted(!AUDIO.muted); safeStorageSet('lc_muted', AUDIO.muted ? '1' : '0'); if (!AUDIO.muted)
                 this.startMenuSpeech(); } });
         INPUT.setButtons(btns);
         INPUT.tapHandlers = [() => this.startMenuSpeech()];
@@ -7762,82 +7776,33 @@ class TitleScene {
         if (document.getElementById('game-dialog'))
             return;
         if (INPUT.pressed('Enter') || INPUT.pressed('Space'))
-            this.beginGame('easy');
+            this.beginGame();
     }
+    layout() { const height = Math.min(950, this.H - APP.safeTop - 32), k = height / 950, top = APP.safeTop + Math.max(12, (this.H - APP.safeTop - height) / 2); return { k, top, logoY: top + 100 * k, heroY: top + 325 * k, taglineY: top + 500 * k, communityY: top + 650 * k, primaryY: top + 760 * k, linksY: top + 855 * k }; }
     draw(g) {
         var _a;
-        const H = this.H, compact = H < 900;
-        this.bg.draw(g, this.bg.stopScroll * .7, H, this.t);
-        const shade = g.createLinearGradient(0, 0, 0, H);
-        shade.addColorStop(0, 'rgba(9,30,35,.48)');
-        shade.addColorStop(.45, 'rgba(9,30,35,.52)');
-        shade.addColorStop(1, 'rgba(6,23,28,.94)');
-        g.fillStyle = shade;
-        g.fillRect(0, 0, 540, H);
+        const H = this.H, l = this.layout();
+        drawMenuBackdrop(g, H);
         if (this.page === 'setup')
             return;
-        const logoScale = compact ? .73 : .83;
-        drawSprite(g, LOGO, 270, (compact ? 71 : 94) + APP.safeTop, 0, logoScale, logoScale);
+        drawSprite(g, LOGO, 270, l.logoY, 0, .85 * l.k, .85 * l.k);
         this.hero.skin = PLAYER_APPEARANCE.get();
-        this.hero.x = 270 + Math.sin(this.t) * 8;
-        this.hero.y = Math.min(H - 520, compact ? 230 : 240) + Math.sin(this.t * 2) * 3;
-        this.hero.scale = compact ? 1.16 : 1.42;
+        this.hero.x = 270;
+        this.hero.y = l.heroY + (APP.reducedMotion ? 0 : Math.sin(this.t * 2) * 3);
+        this.hero.scale = 2.55 * l.k;
         this.hero.draw(g, { blink: false });
-        const taglineY = Math.min(H - 460, 320);
-        g.font = `16px ${FONT_UI}`;
-        g.textAlign = 'center';
-        g.fillStyle = '#fff0c9';
-        g.fillText('UN CULO, UN HÉROE,', 270, taglineY);
-        g.fillText('EL SENTIMIENTO DE UN PAÍS.', 270, taglineY + 22);
-        if (!AUDIO.muted && ((_a = AUDIO.ctx) === null || _a === void 0 ? void 0 : _a.state) !== 'running') {
-            g.font = `14px ${FONT_UI}`;
-            g.fillStyle = '#ffe192';
-            g.fillText('Toca la pantalla para activar la música', 270, taglineY + 49);
-        }
-        const sy = H - 390;
-        roundRect(g, 35, sy, 470, 92, 17);
-        fillStroke(g, 'rgba(13,41,46,.94)', '#b89752', 1.8);
-        g.font = `15px ${FONT_UI}`;
-        g.fillStyle = '#eee1be';
-        g.textAlign = 'center';
-        g.fillText('EL PUEBLO DE CUBA LE HA TIRADO', 270, sy + 22);
-        g.fillText('HASTA LA ACTUALIDAD A LA DICTADURA', 270, sy + 42);
-        comicText(g, `${fmtKg(COMMUNITY.total())} KG DE MIERDA`, 270, sy + 68, 29, '#ffe192', INK, 'center', .12);
-        const ry = H - 285;
-        roundRect(g, 35, ry, 470, 110, 16);
-        fillStroke(g, 'rgba(12,34,40,.93)', '#668177', 1.3);
-        g.font = `17px ${FONT}`;
-        g.fillStyle = '#ffe192';
-        g.textAlign = 'left';
-        g.fillText('TOP 3 · LOS QUE MÁS APORTAN', 52, ry + 24);
-        const rows = COMMUNITY.top(), sampleNames = ['Culo Valiente', 'Yunieski', 'La Yanelis'];
-        for (let i = 0; i < 3; i++) {
-            const yy = ry + 50 + i * 26, entry = rows[i];
-            g.font = `18px ${FONT}`;
-            g.fillStyle = ['#f9d372', '#c9dcdf', '#d59f79'][i];
-            g.fillText(String(i + 1), 53, yy);
-            const alias = entry ? entry.alias : sampleNames[i];
-            let aliasSize = 17;
-            g.font = `${aliasSize}px ${FONT_UI}`;
-            while (g.measureText(alias).width > 278 && aliasSize > 12) {
-                aliasSize--;
-                g.font = `${aliasSize}px ${FONT_UI}`;
-            }
-            g.fillStyle = entry ? '#fff3d5' : '#849d9c';
-            g.fillText(alias, 83, yy);
-            g.textAlign = 'right';
-            g.fillStyle = entry ? '#ffe192' : '#849d9c';
-            g.font = `${entry ? 17 : 12}px ${FONT_UI}`;
-            g.fillText(entry ? `${fmtKg(entry.kg)} kg` : 'MUESTRA', 483, yy);
-            g.textAlign = 'left';
-        }
-        drawButtonBase(g, 52, H - 150, 436, 64, '#bb8438', '¡VAMOS A JUGAR!', 28);
-        drawButtonBase(g, 160, H - 70, 220, 40, '#294b52', 'COMPARTIR', 18);
-        g.font = `11px ${FONT_UI}`;
-        g.textAlign = 'center';
-        g.fillStyle = '#aec3bb';
-        g.fillText(COMMUNITY.statusText(), 270, H - 10);
-        drawButtonBase(g, 482, APP.safeTop + 12, 42, 37, '#294b52', AUDIO.muted ? '♪ ×' : '♪', 19);
+        menuText(g, 'UN CULO, UN HÉROE,', 270, l.taglineY, 30, true);
+        menuText(g, 'EL SENTIMIENTO DE UN PAÍS.', 270, l.taglineY + 34, 28, true);
+        if (!AUDIO.muted && ((_a = AUDIO.ctx) === null || _a === void 0 ? void 0 : _a.state) !== 'running')
+            menuText(g, 'Toca para activar la música', 270, l.taglineY + 70, 18, false, MENU.muted);
+        menuText(g, 'El pueblo le ha tirado al régimen', 270, l.communityY, 22);
+        menuText(g, `${fmtKg(COMMUNITY.total())} KG DE MIERDA`, 270, l.communityY + 40, 38, true, MENU.gold);
+        if (!COMMUNITY.connected)
+            menuText(g, 'Base histórica + tu aporte', 270, l.communityY + 69, 16, false, MENU.muted);
+        drawArcadeButton(g, 50, l.primaryY, 440, 78, PLAYER_ALIAS.hasName() ? '¡VOLVER A JUGAR!' : '¡JUGAR!', true, 32);
+        drawArcadeLink(g, 65, l.linksY, 180, 74, 'Top 3');
+        drawArcadeLink(g, 295, l.linksY, 180, 74, 'Mi héroe');
+        menuText(g, AUDIO.muted ? '♪ ×' : '♪', 498, APP.safeTop + 39, 27);
     }
 }
 // Opening: the visual joke can finish while the menu recording continues.
@@ -7865,17 +7830,16 @@ class OpeningScene {
     update(dt) { this.t += dt; if (this.t >= 6 || INPUT.pressed('Enter') || INPUT.pressed('Space'))
         this.finish(); }
     draw(g) {
-        g.fillStyle = '#120b07';
-        g.fillRect(0, 0, 540, this.H);
+        drawMenuBackdrop(g, this.H);
         const text = 'Durante casi 70 años el régimen\nnos ha tratado como a un culo…\nHoy nos cagamos en ellos.';
-        g.fillStyle = '#ffe066';
+        g.fillStyle = MENU.text;
         g.textAlign = 'center';
         g.textBaseline = 'middle';
         g.font = `25px ${FONT_UI}`;
         const lines = text.split('\n');
         lines.forEach((line, i) => g.fillText(line, 270, this.H * 0.45 + (i - (lines.length - 1) / 2) * 42));
-        g.font = `14px ${FONT_UI}`;
-        g.fillStyle = '#a99b87';
+        g.font = `18px ${FONT_UI}`;
+        g.fillStyle = MENU.muted;
         g.fillText('LA CAGANTINA', 270, this.H * 0.45 - 110);
         g.fillText('Toca para saltar · Enter / Espacio', 270, this.H - 80);
     }
@@ -8062,20 +8026,20 @@ class DeathScene {
     exit() { this.exited = true; AUDIO.stopSpeech(); AUDIO.stopClip(); INPUT.tapHandlers = []; APP.onVisibilityHidden = null; }
     beepAt() { return 1.3 + (this.recorded ? AUDIO.clipDuration('fidelPatria', 16.421) : 3.9) + 0.1; }
     screenText() { return '¡Patria o muerte, venceremos!'; }
-    buttonTop() { return Math.min(this.H / 2 + 140, this.H - (this.checkpoint ? 244 : 180)); }
+    buttonTop() { return resultMenuLayout(this.H, !!this.checkpoint).primaryY; }
     showButtons() {
         this.buttonsShown = true;
         const H = this.H;
         const y0 = this.buttonTop();
         const btns = [];
-        btns.push({ id: 'retry', x: 90, y: y0 + 8, w: 360, h: 64, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(retryCampaignLevel(this.diffId, this.results)); } });
-        let yy = y0 + 84;
+        btns.push({ id: 'retry', x: 50, y: y0, w: 440, h: 78, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(retryCampaignLevel(this.diffId, this.results)); } });
+        let yy = y0 + 91;
         if (this.checkpoint) {
-            btns.push({ id: 'cp', x: 90, y: yy, w: 360, h: 56, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(retryCampaignLevel(this.diffId, this.results, this.checkpoint)); } });
-            yy += 70;
+            btns.push({ id: 'cp', x: 50, y: yy, w: 440, h: 74, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(retryCampaignLevel(this.diffId, this.results, this.checkpoint)); } });
         }
-        btns.push({ id: 'share', x: 90, y: yy, w: 175, h: 54, enabled: () => true, onPress: () => { AUDIO.play('click'); PLATFORM.share(this.results); } });
-        btns.push({ id: 'menu', x: 275, y: yy, w: 175, h: 54, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } });
+        yy = resultMenuLayout(H, !!this.checkpoint).secondaryY;
+        btns.push({ id: 'share', x: 65, y: yy, w: 180, h: 74, enabled: () => true, onPress: () => { AUDIO.play('click'); PLATFORM.share(this.results); } });
+        btns.push({ id: 'menu', x: 295, y: yy, w: 180, h: 74, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } });
         INPUT.setButtons(btns);
     }
     update(dt) {
@@ -8118,34 +8082,17 @@ class DeathScene {
         this.dust = this.dust.filter(d => d.y < 60);
     }
     draw(g) {
-        var _a, _b, _c;
+        var _a;
         const H = this.H;
         const t = this.t;
-        // habitación oscura
-        const room = g.createRadialGradient(270, H * 0.4, 50, 270, H * 0.4, 700);
-        room.addColorStop(0, '#3b2a1c');
-        room.addColorStop(1, '#0d0906');
-        g.fillStyle = room;
-        g.fillRect(0, 0, 540, H);
-        // pared con papel tapiz
-        g.strokeStyle = 'rgba(255,220,170,0.04)';
-        g.lineWidth = 14;
-        for (let x = 0; x < 540; x += 48) {
-            g.beginPath();
-            g.moveTo(x, 0);
-            g.lineTo(x, H * 0.62);
-            g.stroke();
-        }
-        g.fillStyle = '#20150d';
-        g.fillRect(0, H * 0.62, 540, H * 0.38);
-        // mueble
+        drawMenuBackdrop(g, H, ((_a = this.results) === null || _a === void 0 ? void 0 : _a.level) === 2 ? L2_ART.map : ART.plazaPlate);
+        menuText(g, this instanceof VictoryTVScene ? '¡VENCISTE EL NIVEL!' : 'TE PARTIERON EL CULO', 270, APP.safeTop + 47, 36, true);
+        const layout = resultMenuLayout(H, this.buttonsShown && !!this.checkpoint);
+        g.save();
+        g.translate(270, layout.tvY);
+        g.scale(layout.tvScale, layout.tvScale);
+        g.translate(-270, -H * .16);
         const tvX = 30, tvY = H * 0.16, tvW = 480, tvH = 390;
-        roundRect(g, tvX - 20, tvY + tvH - 10, tvW + 40, 40, 8);
-        g.fillStyle = '#4a3020';
-        g.fill();
-        g.strokeStyle = INK;
-        g.lineWidth = 3;
-        g.stroke();
         // ATEC-PANDA reference: charcoal plastic cabinet, front buttons, curved CRT.
         const shell = g.createLinearGradient(tvX, tvY, tvX, tvY + tvH);
         shell.addColorStop(0, '#41474a');
@@ -8274,46 +8221,22 @@ class DeathScene {
         g.fillStyle = gl;
         g.fillRect(0, tvY + tvH, 540, 300);
         g.restore();
+        g.restore();
         if (this.buttonsShown) {
             const k = Math.min(1, (t - this.beepAt() - 1.9) / 0.4);
             g.save();
             g.globalAlpha = k;
             const y0 = this.buttonTop();
-            g.fillStyle = 'rgba(10,6,4,.88)';
-            g.fillRect(0, 0, 540, H);
-            const py = y0 - 365;
-            roundRect(g, 40, py, 460, 353, 26);
-            fillStroke(g, '#fff4db', INK, 4);
-            comicText(g, 'TE PARTIERON EL CULO', 270, py + 35, 30, '#ff6a4d', INK, 'center', .15);
-            g.font = `19px ${FONT_UI}`;
-            g.fillStyle = '#715237';
-            g.textAlign = 'center';
-            g.textBaseline = 'middle';
-            g.fillText('Pero no importa:', 270, py + 86);
-            g.font = `17px ${FONT_UI}`;
-            g.fillText('lo más importante es que le tiraste', 270, py + 114);
-            comicText(g, fmtKg(((_a = this.results) === null || _a === void 0 ? void 0 : _a.kg) || 0) + ' KG', 270, py + 164, 54, '#b63528', INK, 'center', .12);
-            g.font = `19px ${FONT_UI}`;
-            g.fillStyle = '#715237';
-            g.fillText('DE MIERDA A LA DICTADURA.', 270, py + 211);
-            g.font = `17px ${FONT_UI}`;
-            g.fillText('Comparte tu aporte', 270, py + 254);
-            g.font = `14px ${FONT_UI}`;
-            g.fillText('Facebook: post · Instagram: historia', 270, py + 279);
-            g.font = `15px ${FONT_UI}`;
-            g.fillText(fmtInt(((_b = this.results) === null || _b === void 0 ? void 0 : _b.score) || 0) + ' puntos · ' + (((_c = this.results) === null || _c === void 0 ? void 0 : _c.difficulty) || CONFIG.difficulty[this.diffId].label), 270, py + 319);
-            drawButtonBase(g, 90, y0 + 8, 360, 64, '#3aa655', 'REINTENTAR', 30);
-            let yy = y0 + 84;
-            if (this.checkpoint) {
-                drawButtonBase(g, 90, yy, 360, 56, '#e0a020', 'CONTINUAR DESDE CHECKPOINT', 20);
-                yy += 70;
-            }
-            drawButtonBase(g, 90, yy, 175, 54, '#ad813b', 'COMPARTIR', 19);
-            drawButtonBase(g, 275, yy, 175, 54, '#b23a2e', 'MENÚ', 22);
+            drawMenuContribution(g, H, this.results, true, !!this.checkpoint);
+            drawArcadeButton(g, 50, y0, 440, 78, 'REINTENTAR');
+            if (this.checkpoint)
+                drawArcadeButton(g, 50, y0 + 91, 440, 74, 'DESDE EL CHECKPOINT', false, 25);
+            drawArcadeLink(g, 65, layout.secondaryY, 180, 74, 'Compartir');
+            drawArcadeLink(g, 295, layout.secondaryY, 180, 74, 'Inicio');
             g.restore();
         }
         else if (t > 1.5 && !this.beeped && !(this instanceof VictoryTVScene && this.resultsShown)) {
-            drawButtonBase(g, 170, H - 100, 200, 48, '#594332', 'SALTAR', 20);
+            drawArcadeLink(g, 170, H - 108, 200, 74, 'Saltar');
         }
     }
 }
@@ -8351,7 +8274,7 @@ class VictoryTVScene extends DeathScene {
         this.recorded = AUDIO.voicesOn && !AUDIO.muted;
         if (!this.recorded)
             this.voiceDuration = 5;
-        INPUT.setButtons([{ id: 'skip', x: 170, y: this.H - 100, w: 200, h: 48, enabled: () => this.t > 1, onPress: () => this.showResults() }]);
+        INPUT.setButtons([{ id: 'skip', x: 170, y: this.H - 108, w: 200, h: 74, enabled: () => this.t > 1, onPress: () => this.showResults() }]);
         INPUT.tapHandlers = [];
         APP.onVisibilityHidden = () => {
             if (!this.voiceInterrupted && this.spoke)
@@ -8447,21 +8370,18 @@ class VictoryTVScene extends DeathScene {
     showResults() { if (this.resultsShown)
         return; this.voiceRequest++; this.voicePending = false; this.resultsShown = true; this.resultT = 0; AUDIO.stopSpeech(); AUDIO.stopClip(); AUDIO.playSong('victory'); AUDIO.play('pickup'); INPUT.tapHandlers = []; this.layoutButtons(); }
     layoutButtons() {
-        const y = this.H / 2 + 140;
+        const l = resultMenuLayout(this.H);
         INPUT.setButtons([
-            { id: 'again', x: 90, y, w: 360, h: 60, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new PlayScene(this.diffId)); } },
-            { id: 'share', x: 90, y: y + 73, w: 175, h: 50, enabled: () => true, onPress: () => PLATFORM.share(this.results) },
-            { id: 'menu', x: 275, y: y + 73, w: 175, h: 50, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } },
+            { id: 'again', x: 50, y: l.primaryY, w: 440, h: 78, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new PlayScene(this.diffId)); } },
+            { id: 'share', x: 65, y: l.secondaryY, w: 180, h: 74, enabled: () => true, onPress: () => PLATFORM.share(this.results) },
+            { id: 'menu', x: 295, y: l.secondaryY, w: 180, h: 74, enabled: () => true, onPress: () => { AUDIO.play('click'); APP.go(new TitleScene()); } },
         ]);
     }
     draw(g) {
         super.draw(g);
         if (!this.resultsShown) {
-            comicText(g, 'RANDY FUERA DEL AIRE', 270, this.H * .66, 31, '#ffe066', INK, 'center', .2);
-            g.font = `14px ${FONT_UI}`;
-            g.fillStyle = '#cfbd9e';
-            g.textAlign = 'center';
-            g.fillText('SIGUIENTE JEFE · ' + CONFIG.level.nextBossName.toUpperCase(), 270, this.H * .66 + 32);
+            menuText(g, 'RANDY FUERA DEL AIRE', 270, this.H * .66, 31, true, MENU.gold);
+            menuText(g, 'SIGUIENTE JEFE · ' + CONFIG.level.nextBossName.toUpperCase(), 270, this.H * .66 + 40, 20, false, MENU.muted);
         }
         else
             drawVictoryCard(g, this.H, this.results, this.resultT);
@@ -8511,6 +8431,9 @@ const PLAYER_ALIAS = {
     get() { return safeStorageGet('lc_alias') || 'Anónimo'; },
     hasName() { var _a; return safeStorageGet('lc_alias_confirmed') === '1' && !!((_a = safeStorageGet('lc_alias')) === null || _a === void 0 ? void 0 : _a.trim()); },
     ensure() { },
+};
+const PLAYER_PREFERENCES = {
+    difficulty() { const saved = safeStorageGet('lc_difficulty'); return saved === 'veryEasy' || saved === 'hard' ? saved : 'easy'; }
 };
 const PLAYER_DEVICE = {
     get() {
@@ -8603,9 +8526,9 @@ function gameDialog(title, allowClose = true) {
     const previousFocus = document.activeElement;
     const overlay = document.createElement('div');
     overlay.id = 'game-dialog';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:50;background:#0e181be8;display:grid;place-items:center;padding:12px;box-sizing:border-box;font:16px system-ui;color:#f9ebcd;overflow:auto';
+    overlay.className = 'arcade-overlay';
     const box = document.createElement('div');
-    box.style.cssText = 'width:min(460px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;box-sizing:border-box;background:#18333a;border:2px solid #d7b964;border-radius:22px;padding:22px;box-shadow:0 24px 80px #000b;overscroll-behavior:contain';
+    box.className = 'arcade-dialog';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
     box.setAttribute('aria-labelledby', 'game-dialog-title');
@@ -8613,7 +8536,7 @@ function gameDialog(title, allowClose = true) {
     const h = document.createElement('h2');
     h.id = 'game-dialog-title';
     h.textContent = title;
-    h.style.cssText = 'margin:0 0 14px;color:#ffe297;font-size:23px';
+    h.className = 'arcade-heading';
     box.appendChild(h);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
@@ -8649,10 +8572,11 @@ function gameDialog(title, allowClose = true) {
     box.focus();
     return { overlay, box, close };
 }
-function dialogButton(label, fn, box) {
+function dialogButton(label, fn, box, secondary = false) {
     const b = document.createElement('button');
+    b.type = 'button';
     b.textContent = label;
-    b.style.cssText = 'font:700 15px system-ui;padding:12px 18px;border:0;border-radius:10px;margin:12px 8px 0 0;background:#edd07f;color:#182b2d;cursor:pointer';
+    b.className = secondary ? 'arcade-button arcade-secondary' : 'arcade-button';
     b.onclick = () => { AUDIO.unlock(); fn(); };
     box.appendChild(b);
     return b;
@@ -8660,52 +8584,58 @@ function dialogButton(label, fn, box) {
 function showProfileDialog(options = {}) {
     const setup = options.difficulty !== undefined;
     const d = gameDialog(setup ? 'PREPARA TU HÉROE' : 'Ponle nombre a tu culo', !options.required);
-    if (setup) {
-        d.overlay.style.background = '#0c2229f5';
-        d.box.style.padding = '20px';
+    d.box.classList.add('arcade-profile');
+    if (LOGO) {
+        const logo = document.createElement('img');
+        logo.src = LOGO.toDataURL();
+        logo.alt = 'La Cagantina';
+        logo.className = 'arcade-mini-logo';
+        d.box.prepend(logo);
     }
-    let difficulty = null;
+    let selected = options.difficulty || PLAYER_PREFERENCES.difficulty();
     if (setup) {
-        const label = document.createElement('label');
+        const label = document.createElement('div');
         label.textContent = 'NIVEL DE DIFICULTAD:';
-        label.htmlFor = 'player-difficulty';
-        label.style.cssText = 'display:block;font-weight:900;font-size:22px;color:#ffe297;margin:16px 0 10px';
+        label.id = 'player-difficulty-label';
+        label.className = 'arcade-field-heading';
         d.box.appendChild(label);
-        difficulty = document.createElement('select');
-        difficulty.id = 'player-difficulty';
-        difficulty.style.cssText = 'width:100%;padding:12px;border:1px solid #d7b964;border-radius:10px;background:#294d51;color:#fff4da;font:700 16px system-ui';
-        for (const id of ['veryEasy', 'easy', 'hard']) {
-            const option = document.createElement('option');
-            option.value = id;
-            option.textContent = CONFIG.difficulty[id].label;
-            difficulty.appendChild(option);
-        }
-        difficulty.value = options.difficulty;
-        d.box.appendChild(difficulty);
+        const choices = document.createElement('div');
+        choices.className = 'arcade-difficulties';
+        choices.setAttribute('role', 'group');
+        choices.setAttribute('aria-labelledby', label.id);
+        d.box.appendChild(choices);
         const caption = document.createElement('p');
-        caption.style.cssText = 'margin:7px 0 0;font-size:14px;color:#e7d8ad';
-        const describe = () => { caption.textContent = CONFIG.difficulty[difficulty.value].desc; };
-        difficulty.onchange = describe;
+        caption.className = 'arcade-description';
+        caption.setAttribute('aria-live', 'polite');
+        const buttons = [];
+        const describe = () => { caption.textContent = CONFIG.difficulty[selected].desc; buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.difficulty === selected))); };
+        for (const id of ['veryEasy', 'easy', 'hard']) {
+            const b = dialogButton(CONFIG.difficulty[id].label, () => { selected = id; describe(); }, choices, true);
+            b.dataset.difficulty = id;
+            buttons.push(b);
+        }
         describe();
         d.box.appendChild(caption);
     }
-    const info = document.createElement('p');
-    info.textContent = setup ? 'Ponle nombre a tu culo' : 'Este nombre aparecerá en tus aportes y en la imagen que compartas. Hasta 20 caracteres.';
-    info.style.cssText = 'line-height:1.5;margin:16px 0 8px;font-weight:700';
+    const info = document.createElement('label');
+    info.textContent = 'Ponle nombre a tu culo';
+    info.htmlFor = 'player-name';
+    info.className = 'arcade-field-label';
     d.box.appendChild(info);
     const input = document.createElement('input');
+    input.id = 'player-name';
     input.type = 'text';
     input.maxLength = 20;
     input.setAttribute('autocomplete', 'nickname');
     input.value = PLAYER_ALIAS.hasName() ? PLAYER_ALIAS.get() : '';
-    input.placeholder = '¿Cómo se llama tu héroe?';
+    input.placeholder = 'Tu nombre de héroe';
     input.setAttribute('aria-label', 'Nombre del jugador');
-    input.style.cssText = 'box-sizing:border-box;width:100%;padding:13px;border-radius:10px;border:1px solid #ae9c71;background:#fff4da;color:#192b2b;font:18px system-ui;user-select:text';
+    input.className = 'arcade-input';
     d.box.appendChild(input);
     let skin = PLAYER_APPEARANCE.get();
     if (setup) {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:22px;margin:14px 0 0';
+        row.className = 'arcade-appearance';
         d.box.appendChild(row);
         const preview = document.createElement('canvas');
         preview.width = 132;
@@ -8726,7 +8656,7 @@ function showProfileDialog(options = {}) {
         const redraw = () => { hero.skin = skin; const g = preview.getContext('2d'); g.clearRect(0, 0, 132, 170); hero.draw(g, { blink: false }); };
         ['blanco', 'mulato'].forEach((tone, i) => {
             const label = document.createElement('label');
-            label.style.cssText = 'display:grid;place-items:center;width:52px;height:52px;border-radius:50%;cursor:pointer';
+            label.className = 'arcade-swatch';
             const choice = document.createElement('input');
             choice.type = 'radio';
             choice.name = 'player-skin';
@@ -8744,8 +8674,8 @@ function showProfileDialog(options = {}) {
         redraw();
     }
     const error = document.createElement('p');
-    error.setAttribute('role', 'status');
-    error.style.cssText = 'font-size:14px;color:#ffd898;min-height:20px;margin:8px 0 0';
+    error.setAttribute('role', 'alert');
+    error.className = 'arcade-error';
     d.box.appendChild(error);
     const save = () => {
         var _a;
@@ -8759,18 +8689,20 @@ function showProfileDialog(options = {}) {
         CONTRIBUTORS.read();
         safeStorageSet('lc_alias', name);
         safeStorageSet('lc_alias_confirmed', '1');
-        if (setup)
+        if (setup) {
             safeStorageSet('lc_skin', skin);
+            safeStorageSet('lc_difficulty', selected);
+        }
         CONTRIBUTORS.add(name, 0, storedNumber('lc_best'));
         COMMUNITY.sync();
         d.close();
-        (_a = options.onSave) === null || _a === void 0 ? void 0 : _a.call(options, difficulty === null || difficulty === void 0 ? void 0 : difficulty.value);
+        (_a = options.onSave) === null || _a === void 0 ? void 0 : _a.call(options, setup ? selected : undefined);
     };
     dialogButton(options.required ? '¡A jugar!' : 'Guardar', save, d.box);
     if (!options.required)
-        dialogButton('Cancelar', d.close, d.box);
+        dialogButton('Cancelar', d.close, d.box, true);
     if (options.onBack)
-        dialogButton('Volver', () => { var _a; d.close(); (_a = options.onBack) === null || _a === void 0 ? void 0 : _a.call(options); }, d.box);
+        dialogButton('Volver', () => { var _a; d.close(); (_a = options.onBack) === null || _a === void 0 ? void 0 : _a.call(options); }, d.box, true).classList.add('arcade-link');
     input.addEventListener('keydown', e => { if (e.key === 'Enter') {
         e.preventDefault();
         AUDIO.unlock();
@@ -8782,6 +8714,25 @@ function showProfileDialog(options = {}) {
         input.focus();
         input.select();
     }
+}
+function showLeaderboardDialog() {
+    var _a;
+    const d = gameDialog('Los que más han aportado'), rows = COMMUNITY.top(), sample = ['Culo Valiente', 'Yunieski', 'La Yanelis'];
+    const list = document.createElement('ol');
+    list.className = 'arcade-ranking';
+    for (let i = 0; i < 3; i++) {
+        const li = document.createElement('li'), name = document.createElement('span'), amount = document.createElement('strong');
+        name.textContent = ((_a = rows[i]) === null || _a === void 0 ? void 0 : _a.alias) || sample[i];
+        amount.textContent = rows[i] ? fmtKg(rows[i].kg) + ' kg' : 'Muestra';
+        li.append(name, amount);
+        list.appendChild(li);
+    }
+    d.box.appendChild(list);
+    const note = document.createElement('p');
+    note.className = 'arcade-description';
+    note.textContent = COMMUNITY.statusText();
+    d.box.appendChild(note);
+    dialogButton('Volver', d.close, d.box);
 }
 function shareResult(r) {
     const source = r || {};
@@ -8903,41 +8854,37 @@ function buildResultShareCard(r, format) {
 function showShareSheet(result, initialFormat = 'facebook') {
     const r = shareResult(result), text = resultShareText(r), d = gameDialog('Comparte tu aporte');
     let format = initialFormat;
-    const info = document.createElement('p');
-    info.textContent = 'Facebook como post · Instagram como historia';
-    info.style.cssText = 'font-size:14px;line-height:1.5;margin:0 0 10px;color:#cce4e5';
-    d.box.appendChild(info);
     const formats = document.createElement('div');
-    formats.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+    formats.className = 'arcade-share-formats';
+    formats.setAttribute('role', 'group');
+    formats.setAttribute('aria-label', 'Dónde compartir');
     d.box.appendChild(formats);
     const preview = document.createElement('img');
     preview.alt = 'Vista previa de la imagen para redes';
-    preview.style.cssText = 'display:block;width:100%;max-height:220px;object-fit:contain;background:#102c35;border-radius:12px;margin:14px 0';
+    preview.className = 'arcade-share-preview';
     d.box.appendChild(preview);
     let card;
     const buttons = [];
-    const select = (value) => { format = value; card = buildResultShareCard(r, format); preview.src = card.toDataURL('image/png'); buttons.forEach((b, i) => { const selected = (i === 0) === (format === 'facebook'); b.setAttribute('aria-pressed', String(selected)); b.style.background = selected ? '#edd07f' : '#395861'; b.style.color = selected ? '#182b2d' : '#fff1d8'; }); };
-    buttons.push(dialogButton('Facebook · post', () => select('facebook'), formats), dialogButton('Instagram · historia', () => select('instagram'), formats));
-    buttons.forEach(b => { b.style.cssText += ';flex:1;margin:0;padding:12px 8px;min-height:44px'; });
-    const captionLabel = document.createElement('label');
-    captionLabel.htmlFor = 'lc-post-caption';
-    captionLabel.textContent = 'Texto de la publicación';
-    captionLabel.style.cssText = 'display:block;font-size:13px;color:#cce4e5;margin:0 0 6px';
-    d.box.appendChild(captionLabel);
+    const select = (value) => { format = value; card = buildResultShareCard(r, format); preview.src = card.toDataURL('image/png'); buttons.forEach((b, i) => b.setAttribute('aria-pressed', String((i === 0) === (format === 'facebook')))); };
+    buttons.push(dialogButton('Facebook · post', () => select('facebook'), formats, true), dialogButton('Instagram · historia', () => select('instagram'), formats, true));
+    const textDetails = document.createElement('details');
+    textDetails.className = 'arcade-share-text';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Texto de la publicación';
+    textDetails.appendChild(summary);
     const area = document.createElement('textarea');
     area.id = 'lc-post-caption';
     area.value = text;
     area.readOnly = true;
     area.setAttribute('aria-label', 'Resultado para compartir');
-    area.style.cssText = 'box-sizing:border-box;width:100%;height:116px;padding:12px;border:0;border-radius:10px;background:#fff4da;color:#193136;font:15px/1.45 system-ui;user-select:text';
-    d.box.appendChild(area);
+    area.className = 'arcade-input';
+    textDetails.appendChild(area);
     const status = document.createElement('p');
     status.setAttribute('role', 'status');
-    status.style.cssText = 'font-size:13px;line-height:1.45;margin:10px 0 0';
-    status.textContent = 'Guarda la imagen y súbela como post o historia. Compartir abre las opciones disponibles de tu dispositivo.';
+    status.className = 'arcade-description';
+    status.textContent = 'Tu aporte, como post o historia.';
     d.box.appendChild(status);
     const download = () => { const a = document.createElement('a'); a.download = `La-Cagantina-${format === 'instagram' ? 'historia' : 'post'}.png`; a.href = card.toDataURL('image/png'); a.click(); status.textContent = format === 'instagram' ? 'Historia guardada (1080 × 1920). Súbela a tu historia de Instagram.' : 'Post guardado (1200 × 630). Súbelo a Facebook.'; };
-    dialogButton('Guardar tarjeta', download, d.box);
     dialogButton('Compartir imagen', async () => {
         var _a;
         const nav = navigator;
@@ -8961,6 +8908,7 @@ function showShareSheet(result, initialFormat = 'facebook') {
                 download();
         }
     }, d.box);
+    dialogButton('Guardar imagen', download, d.box, true);
     dialogButton('Copiar texto', async () => {
         try {
             if (!navigator.clipboard)
@@ -8969,12 +8917,14 @@ function showShareSheet(result, initialFormat = 'facebook') {
             status.textContent = '¡Texto copiado!';
         }
         catch (e) {
+            textDetails.open = true;
             area.focus();
             area.select();
             status.textContent = 'Selecciona y copia el texto.';
         }
-    }, d.box);
-    dialogButton('Cerrar', d.close, d.box);
+    }, textDetails, true);
+    d.box.appendChild(textDetails);
+    dialogButton('Volver', d.close, d.box, true).classList.add('arcade-link');
     select(initialFormat);
     buttons[initialFormat === 'instagram' ? 1 : 0].focus();
 }
@@ -10188,6 +10138,50 @@ function ensureLevel2Art() {
     return level2ArtReady;
 }
 const LEVEL2_RULES = { bubbleEvery: 25000, bubbleDuration: 6, bubbleRadius: 56, bubbleContactEvery: .35, bubbleContactDamage: CONFIG.weapons.base.damage };
+// The transition owns a two-recording queue, then hands it to Santiago.
+// Scene changes never count as the end of a recording.
+const CAMPAIGN_VOICE = {
+    active: false, id: 'fidelFarewell', offset: 0, pending: false, interrupted: false, token: 0, retryAt: 0,
+    start() { this.cancel(); this.active = true; this.id = 'fidelFarewell'; this.offset = 0; this.interrupted = false; AUDIO.prepareClips(['fidelFarewell', 'l2FidelIntermission']); this.tick(); },
+    cancel() { this.token++; this.active = false; this.pending = false; this.interrupted = false; },
+    suspend() { if (!this.active)
+        return; this.offset = Math.max(this.offset, AUDIO.clipPosition(this.id)); this.interrupted = true; this.token++; this.pending = false; },
+    resume() { if (!this.active)
+        return; this.interrupted = false; AUDIO.resume(); this.tick(); },
+    tick() {
+        var _a;
+        if (!this.active || this.interrupted)
+            return;
+        if (AUDIO.clipPlaying === this.id) {
+            this.offset = Math.max(this.offset, AUDIO.clipPosition(this.id));
+            return;
+        }
+        if (AUDIO.clipPlaying && AUDIO.clipPlaying !== this.id) {
+            this.cancel();
+            return;
+        }
+        if (this.pending || AUDIO.muted || !AUDIO.voicesOn || ((_a = AUDIO.ctx) === null || _a === void 0 ? void 0 : _a.state) !== 'running' || performance.now() < this.retryAt)
+            return;
+        const token = ++this.token;
+        this.pending = true;
+        AUDIO.playClip(this.id, this.offset, undefined, 1, () => {
+            if (token !== this.token || !this.active || this.interrupted)
+                return;
+            this.pending = false;
+            if (this.id === 'fidelFarewell') {
+                this.id = 'l2FidelIntermission';
+                this.offset = 0;
+                this.tick();
+            }
+            else
+                this.cancel();
+        }).then(ok => { if (token !== this.token)
+            return; this.pending = false; if (!ok) {
+            this.offset = Math.max(this.offset, AUDIO.clipPosition(this.id));
+            this.retryAt = performance.now() + 250;
+        } });
+    }
+};
 class Level2Director extends Director {
     get chapters() {
         return CONFIG.waves.chapters.map(c => ({ ...c,
@@ -10232,7 +10226,9 @@ class Level2PlayScene extends PlayScene {
         this.showBanner(this.startT > 0 ? 'CHECKPOINT' : 'NIVEL 2', this.startT > 0 ? this.chapterName : 'SANTIAGO DE CUBA', 2.6, '#ffe066');
         APP.onVisibilityHidden = () => {
             const id = AUDIO.clipPlaying || AUDIO.clipPendingId, actor = this.activeActor;
-            if (id && (id.startsWith('l2') || id === 'l2FidelIntermission'))
+            if (CAMPAIGN_VOICE.active)
+                CAMPAIGN_VOICE.suspend();
+            else if (id && id.startsWith('l2'))
                 this.audioResumeState = { id, offset: AUDIO.clipPosition(id), actor };
             this.accountProgress();
             COMMUNITY.sync();
@@ -10241,10 +10237,11 @@ class Level2PlayScene extends PlayScene {
         };
         APP.onVisibilityVisible = () => { if (!this.paused) {
             AUDIO.resume();
+            CAMPAIGN_VOICE.resume();
             this.restoreActorAudio();
         } };
     }
-    exit() { this.audioResumeState = null; APP.onVisibilityVisible = null; super.exit(); }
+    exit() { CAMPAIGN_VOICE.cancel(); this.audioResumeState = null; APP.onVisibilityVisible = null; super.exit(); }
     restoreActorAudio() {
         var _a, _b;
         const saved = this.audioResumeState;
@@ -10265,8 +10262,10 @@ class Level2PlayScene extends PlayScene {
                 next(index + 1); });
         });
     }
-    setPaused(p) { super.setPaused(p); if (!p)
-        this.restoreActorAudio(); }
+    setPaused(p) { super.setPaused(p); if (!p) {
+        CAMPAIGN_VOICE.resume();
+        this.restoreActorAudio();
+    } }
     spawnMachi() { this.machi = new GerardoL2(); this.showBanner('CON LA GUARDIA EN ALTO', 'GERARDO HERNÁNDEZ', 2.2, '#ffb493'); }
     spawnSandro() { this.sandro = new YusuamL2(); this.showBanner('¡TRIBUNA ABIERTA!', 'YUSUAM PALACIOS', 2.2, '#f6d855'); }
     spawnIsrael() { this.israel = new HugoL2(); this.showBanner('¡QUÉ OLOR!', 'HUGO CANCIO', 2.2, '#9ce8d6'); }
@@ -10317,6 +10316,8 @@ class Level2PlayScene extends PlayScene {
     hurtPlayer(fromX) { if (this.bubbleT > 0)
         return; super.hurtPlayer(fromX); }
     update(dt) {
+        if (!this.paused)
+            CAMPAIGN_VOICE.tick();
         const frozen = this.paused || this.hitstopT > 0;
         super.update(dt);
         if (frozen || this.paused || this.state !== 'play')
@@ -10388,23 +10389,76 @@ class Level1VictoryTVScene extends VictoryTVScene {
     constructor(diffId, results, carry) {
         super(diffId, results);
         this.carry = carry;
+        this.ready = false;
+        this.loadError = false;
+        this.loading = false;
+        this.leaving = false;
+        this.loadRetryAt = 0;
     }
-    enter() { super.enter(); ensureLevel2Art().catch(() => { }); }
+    enter() {
+        super.enter();
+        this.resultsShown = true;
+        this.layoutButtons();
+        this.load();
+        APP.onVisibilityHidden = () => { this.voiceInterrupted = true; CAMPAIGN_VOICE.suspend(); };
+        APP.onVisibilityVisible = () => { this.voiceInterrupted = false; CAMPAIGN_VOICE.resume(); };
+    }
+    load() { if (this.loading || this.ready)
+        return; this.loading = true; ensureLevel2Art().then(() => { this.ready = true; this.loadError = false; this.loading = false; this.layoutButtons(); }).catch(() => { this.loadError = true; this.loading = false; this.loadRetryAt = this.t + 2; this.layoutButtons(); }); }
     layoutButtons() {
-        super.layoutButtons();
-        const primary = INPUT.buttons.find(b => b.id === 'again');
-        if (primary) {
-            primary.id = 'continue';
-            primary.onPress = () => { AUDIO.unlock(); AUDIO.play('click'); APP.go(new Level2IntermissionScene(this.diffId, this.carry)); };
+        INPUT.setButtons(this.loadError ? [
+            { id: 'reload', x: 50, y: this.H - 175, w: 440, h: 78, enabled: () => !this.loading, onPress: () => this.load() },
+            { id: 'menu', x: 160, y: this.H - 84, w: 220, h: 74, enabled: () => true, onPress: () => APP.go(new TitleScene()) }
+        ] : []);
+        INPUT.tapHandlers = [];
+    }
+    showResults() { } // No results menu, skip button or confirmation between levels.
+    update(dt) {
+        if (this.voiceInterrupted || document.hidden)
+            return;
+        this.t += dt;
+        this.resultT += dt;
+        if (this.t >= 1.1 && !this.spoke) {
+            this.spoke = true;
+            if (this.recorded)
+                CAMPAIGN_VOICE.start();
+        }
+        CAMPAIGN_VOICE.tick();
+        if (this.loadError && this.t >= this.loadRetryAt)
+            this.load();
+        if (this.t >= 4.8 && this.ready && !this.leaving && APP.fadeDir === 0) {
+            this.leaving = true;
+            APP.go(new Level2PlayScene(this.diffId, 0, this.carry));
+        }
+    }
+    exit() {
+        this.exited = true;
+        INPUT.tapHandlers = [];
+        APP.onVisibilityHidden = null;
+        APP.onVisibilityVisible = null;
+        if (!this.leaving) {
+            CAMPAIGN_VOICE.cancel();
+            AUDIO.stopClip();
         }
     }
     draw(g) {
-        if (!this.resultsShown) {
-            super.draw(g);
-            return;
-        }
         DeathScene.prototype.draw.call(this, g);
-        drawVictoryCard(g, this.H, this.results, this.resultT, 'CONTINUAR · NIVEL 2');
+        drawMenuContribution(g, this.H, this.results);
+        const y = this.H - 164;
+        menuText(g, 'PRÓXIMA PARADA', 270, y, 23, true, MENU.muted);
+        menuText(g, 'SANTIAGO DE CUBA', 270, y + 44, 36, true, MENU.gold);
+        if (this.loadError) {
+            drawArcadeButton(g, 50, this.H - 175, 440, 78, 'REINTENTAR CARGA');
+            drawArcadeLink(g, 160, this.H - 84, 220, 74, 'Volver al inicio');
+        }
+        else {
+            menuText(g, this.ready ? 'La lucha continúa…' : 'Preparando Santiago…', 270, this.H - 50, 20, false, MENU.muted);
+            const progress = clamp(this.t / 4.8, 0, 1);
+            g.fillStyle = '#365360';
+            g.fillRect(190, this.H - 88, 160, 4);
+            g.fillStyle = MENU.gold;
+            g.fillRect(190, this.H - 88, 160 * progress, 4);
+        }
     }
 }
 class Level2IntermissionScene {
@@ -10448,16 +10502,11 @@ class Level2IntermissionScene {
     update(dt) { this.t += dt; if (this.t >= 3.2 || INPUT.pressed('Enter') || INPUT.pressed('Space'))
         this.finish(); }
     draw(g) {
-        g.fillStyle = '#120b07';
-        g.fillRect(0, 0, 540, this.H);
-        comicText(g, 'NIVEL 2', 270, this.H * .4, 48, '#ffe066', INK);
-        comicText(g, 'SANTIAGO DE CUBA', 270, this.H * .4 + 61, 31, '#fff4da', INK);
-        g.font = '19px ' + FONT_UI;
-        g.fillStyle = '#cfbd9e';
-        g.textAlign = 'center';
-        g.fillText('La lucha continúa.', 270, this.H * .4 + 106);
-        g.font = '14px ' + FONT_UI;
-        g.fillText(this.error ? 'No se pudo cargar. Toca para reintentar.' : this.ready ? 'Toca para comenzar · Enter / Espacio' : 'Cargando Santiago…', 270, this.H - 80);
+        drawMenuBackdrop(g, this.H, L2_ART.map || ART.plazaPlate);
+        menuText(g, 'NIVEL 2', 270, this.H * .4, 48, true, MENU.gold);
+        menuText(g, 'SANTIAGO DE CUBA', 270, this.H * .4 + 61, 31, true);
+        menuText(g, 'La lucha continúa.', 270, this.H * .4 + 106, 23);
+        menuText(g, this.error ? 'No se pudo cargar. Toca para reintentar.' : this.ready ? '' : 'Cargando Santiago…', 270, this.H - 80, 20, false, MENU.muted);
     }
 }
 class Level2VictoryTVScene extends VictoryTVScene {
@@ -10468,7 +10517,7 @@ class Level2VictoryTVScene extends VictoryTVScene {
         if (this.resultsShown)
             drawVictoryCard(g, this.H, this.results, this.resultT);
         else
-            comicText(g, '¡GUILLERMO DERROTADO!', 270, this.H * .66, 28, '#ffe066', INK, 'center', .2);
+            menuText(g, '¡GUILLERMO DERROTADO!', 270, this.H * .66, 31, true, MENU.gold);
     }
 }
 

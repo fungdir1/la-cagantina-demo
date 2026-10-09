@@ -1,8 +1,10 @@
 # La Cagantina
 
-[Prueba el juego](https://fungdir1.github.io/la-cagantina-demo/?v=0.7.0-two-levels) en móvil o PC.
+[Prueba el juego](https://fungdir1.github.io/la-cagantina-demo/?v=0.8.0-arcade-menus) en móvil o PC.
 
-Versión 0.7.0-two-levels: La Habana y Santiago de Cuba en una misma partida. Tras derrotar a Randy, continúa al nivel 2 desde la pantalla de resultados. El héroe conserva su arma, curitas, especiales y aporte. Los reintentos vuelven al nivel donde ocurrió la derrota.
+Versión 0.8.0-arcade-menus: menús Arcade claro y transición automática entre La Habana y Santiago de Cuba. Tras derrotar a Randy, el televisor anuncia el nivel 2 y el juego continúa sin pulsar un botón. Las grabaciones de Fidel se reproducen completas, también durante el combate. El héroe conserva su arma, curitas, especiales y aporte. Los reintentos vuelven al nivel donde ocurrió la derrota.
+
+La primera vez eliges dificultad, nombre y color. El navegador recuerda tus preferencias para volver a jugar directamente; puedes cambiarlas en «Mi héroe».
 
 Controles: arrastra para moverte en móvil; teclado en PC. El disparo es automático. El primer toque habilita el audio según las reglas del navegador.
 
